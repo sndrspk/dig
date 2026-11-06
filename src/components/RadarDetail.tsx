@@ -1,4 +1,5 @@
-import { useDeleteRadar, useRadarItem } from '../data';
+import { useEffect, useState } from 'react';
+import { useDeleteRadar, useRadarItem, useUpdateRadar } from '../data';
 import { fmtDate } from '../format';
 import { openInQobuz } from '../radar/handoff';
 import { Badge } from './Badge';
@@ -14,8 +15,18 @@ export function RadarDetail({
 }) {
   const itemQ = useRadarItem(id);
   const del = useDeleteRadar();
+  const update = useUpdateRadar();
+  const [title, setTitle] = useState('');
+  const [artist, setArtist] = useState('');
 
   const item = itemQ.data;
+
+  useEffect(() => {
+    if (item) {
+      setTitle(item.title);
+      setArtist(item.artist);
+    }
+  }, [item?.id, item?.title, item?.artist]);
   if (!item) {
     return (
       <div className="detail">
@@ -40,9 +51,30 @@ export function RadarDetail({
         </div>
         <div className="detail-info">
           <h2>
-            {item.title} <Badge item={item} />
+            {item.title || (item.serviceId ? `${item.service} ${item.serviceId}` : '(untitled)')}{' '}
+            <Badge item={item} />
           </h2>
-          <p className="muted">{item.artist || 'unknown artist'}</p>
+          <div className="radar-edit">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Album title"
+              aria-label="Album title"
+            />
+            <input
+              value={artist}
+              onChange={(e) => setArtist(e.target.value)}
+              placeholder="Artist"
+              aria-label="Artist"
+            />
+            <button
+              className="btn"
+              disabled={update.isPending || (title === item.title && artist === item.artist)}
+              onClick={() => void update.mutateAsync({ id: item.id, title, artist })}
+            >
+              Save
+            </button>
+          </div>
           <p className="muted small">
             on the radar since {fmtDate(item.addedAt)} · via {item.service}
             {item.url && (

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from './db';
 import { syncLibrary } from './ib/library';
 import { radarDedupeKey } from './radar/inbox';
-import { parseShared } from './radar/parse';
+import { isValidShare, parseShared, shareFallbackTitle } from './radar/parse';
 import type { Note, RadarItem, Shelf } from './types';
 
 export function useAlbums() {
@@ -91,7 +91,11 @@ export function useAddRadar() {
   return useMutation({
     mutationFn: async (input: { title?: string; text?: string; url?: string }) => {
       const parsed = parseShared(input);
-      if (!parsed.title && !parsed.serviceId) throw new Error('could not parse that — paste a link or "Artist – Album"');
+      if (!isValidShare(parsed)) {
+        throw new Error(
+          'Couldn\u2019t parse that \u2014 paste a Qobuz / Bandcamp / Record Club link, or write \u201cArtist \u2013 Album\u201d.',
+        );
+      }
       const existing = await db.radar.toArray();
       const key = radarDedupeKey(parsed);
       if (existing.some((r) => radarDedupeKey(r) === key)) {
@@ -99,7 +103,7 @@ export function useAddRadar() {
       }
       const item: RadarItem = {
         id: crypto.randomUUID(),
-        title: parsed.title || '(untitled)',
+        title: shareFallbackTitle(parsed),
         artist: parsed.artist,
         service: parsed.service,
         serviceId: parsed.serviceId,
@@ -121,6 +125,19 @@ export function useDeleteRadar() {
       await db.radar.delete(id);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['radar'] }),
+  });
+}
+
+export function useUpdateRadar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title, artist }: { id: string; title: string; artist: string }) => {
+      await db.radar.update(id, { title: title.trim(), artist: artist.trim() });
+    },
+    onSuccess: (_r, vars) => {
+      void qc.invalidateQueries({ queryKey: ['radar'] });
+      void qc.invalidateQueries({ queryKey: ['radarItem', vars.id] });
+    },
   });
 }
 

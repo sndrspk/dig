@@ -5,7 +5,7 @@ export function qobuzHandoffUrl(item: RadarItem): string {
     return `https://open.qobuz.com/album/${item.serviceId}`;
   }
   const q = `${item.artist} ${item.title}`.trim();
-  return `https://open.qobuz.com/search/${encodeURIComponent(q)}`;
+  return `https://open.qobuz.com/search?query=${encodeURIComponent(q)}`;
 }
 
 export function openInQobuz(item: RadarItem): void {

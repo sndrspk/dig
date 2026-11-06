@@ -560,6 +560,18 @@ code {
   flex-wrap: wrap;
 }
 
+.radar-edit {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.radar-edit input {
+  width: 220px;
+  max-width: 100%;
+}
+
 .graduate-banner {
   background: #052e22;
   border: 1px solid #065f46;
