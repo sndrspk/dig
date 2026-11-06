@@ -3,15 +3,17 @@ import { db } from './db';
 import { syncLibrary } from './ib/library';
 import { radarDedupeKey } from './radar/inbox';
 import { isValidShare, parseShared, shareFallbackTitle } from './radar/parse';
+import { buildProfile, generateEditorial } from './editorial/editorial';
 import {
   deleteNoteRemote,
   deleteRadarRemote,
   deleteShelfRemote,
+  pushEditorial,
   pushNote,
   pushRadar,
   pushShelf,
 } from './sync/sync';
-import type { Note, RadarItem, Shelf } from './types';
+import type { Editorial, Note, RadarItem, Shelf } from './types';
 
 export function useAlbums() {
   return useQuery({
@@ -233,5 +235,47 @@ export function useDeleteNote() {
       deleteNoteRemote(vars.id);
     },
     onSuccess: (_r, vars) => void qc.invalidateQueries({ queryKey: ['notes', vars.albumId] }),
+  });
+}
+
+export function useEditorial(albumId: string | null) {
+  return useQuery({
+    queryKey: ['editorial', albumId],
+    enabled: albumId !== null,
+    queryFn: async () => (albumId ? ((await db.editorials.get(albumId)) ?? null) : null),
+  });
+}
+
+export function useGenerateEditorial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (albumId: string) => {
+      const album = await db.albums.get(albumId);
+      if (!album) throw new Error('album not found');
+      const tracks = (await db.tracks.where('albumId').equals(albumId).toArray()).sort(
+        (a, b) => a.track - b.track,
+      );
+      const notes = await db.notes.where('albumId').equals(albumId).toArray();
+      const profile = await buildProfile();
+      const existing = await db.editorials.get(albumId);
+      const { text, model } = await generateEditorial(
+        album,
+        tracks,
+        profile,
+        notes[0]?.text ?? null,
+      );
+      const now = Date.now();
+      const editorial: Editorial = {
+        albumId,
+        text,
+        model,
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+      };
+      await db.editorials.put(editorial);
+      pushEditorial(editorial);
+      return editorial;
+    },
+    onSuccess: (_ed, albumId) => void qc.invalidateQueries({ queryKey: ['editorial', albumId] }),
   });
 }

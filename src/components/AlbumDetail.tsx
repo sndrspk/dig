@@ -1,9 +1,12 @@
 import { useState, useSyncExternalStore } from 'react';
+import { readMistralKey } from '../editorial/editorial';
 import { player } from '../player/player';
 import {
   useAddNote,
   useAlbum,
   useDeleteNote,
+  useEditorial,
+  useGenerateEditorial,
   useNotes,
   useShelves,
   useToggleAlbumInShelf,
@@ -28,6 +31,9 @@ export function AlbumDetail({
   const addNote = useAddNote();
   const deleteNote = useDeleteNote();
   const toggleShelf = useToggleAlbumInShelf();
+  const editorialQ = useEditorial(id);
+  const generate = useGenerateEditorial();
+  const mistralReady = readMistralKey().length > 0;
   const [noteText, setNoteText] = useState('');
   const playerState = useSyncExternalStore(player.subscribe, player.getState);
 
@@ -130,6 +136,29 @@ export function AlbumDetail({
           );
         })}
       </ol>
+
+      <section className="editorial">
+        <h3>Editorial</h3>
+        {editorialQ.data && (
+          <blockquote className="editorial-text">
+            {editorialQ.data.text}
+            <footer className="muted small">
+              generated {fmtDate(editorialQ.data.updatedAt)} · {editorialQ.data.model}
+            </footer>
+          </blockquote>
+        )}
+        <button
+          className="btn btn-primary"
+          disabled={generate.isPending || !mistralReady}
+          title={mistralReady ? undefined : 'Add a Mistral API key in the Sync panel first'}
+          onClick={() => void generate.mutateAsync(album.id).catch(() => undefined)}
+        >
+          {generate.isPending ? 'Writing…' : editorialQ.data ? 'Regenerate editorial' : 'Generate editorial'}
+        </button>
+        {!mistralReady && (
+          <p className="muted small">Set a Mistral API key in the Sync panel to enable editorials.</p>
+        )}
+      </section>
 
       <section className="notes">
         <h3>Notes</h3>

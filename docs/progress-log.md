@@ -436,3 +436,29 @@ sampling (CORS?) — canvas tainted by cross-origin data".
 canvas was tainted. Fix: `img.crossOrigin = 'anonymous'` in the sampler; on
 failure the fallback is now a quiet `console.warn` + idle purple instead of the
 red error banner (cosmetic, not an API error). Build + lint pass; redeployed.
+
+## 2026-11-06 — Session 17: final step — light brutalist UI + AI editorials
+
+**Done**
+- **UI:** full light-mode brutalist/fashion redesign (paper `#f4f1e8`, hard 2–3px
+  black rules, square corners, offset solid shadows, hover/press physics).
+  Type: Archivo Black (display, uppercase), Space Mono (labels/buttons),
+  Instrument Serif italic (editorial paragraphs) via Google Fonts. Idle accent
+  is bright green `#00c832`; while playing, the accent is the artwork-sampled
+  colour (existing `--accent` mechanism). Inspired by Line Of Best Fit-style
+  editorial layouts; legibility kept (mono labels ≥0.72rem, high contrast).
+- **AI editorials:** per-album "Generate editorial" / "Regenerate editorial"
+  button on the album page (on-request only, never automatic). Calls
+  `https://api.mistral.ai/v1/chat/completions` (`mistral-small-latest`) from
+  the browser with the user's own key (Sync panel → "Editorial AI", stored in
+  localStorage, never committed). The prompt embeds a taste profile built from
+  the library (album count, top tags/artists/genres, recent personal notes) +
+  album metadata + the user's own note. Result saved in Dexie (`editorials`
+  table) and synced cross-device via new `dig_editorials` Supabase table
+  (migration applied; realtime + LWW wired like the other tables).
+- Prompt/profile builders unit-smoke-tested in Node; `npm run build` + lint
+  pass (tsc needed `--force` once — stale tsbuildinfo).
+
+**Next**
+- User merges PR, redeploys gh-pages (done by agent), hard-refreshes both
+  devices, adds Mistral key, tries Generate editorial. Then issue #2 closes.
