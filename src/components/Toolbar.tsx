@@ -41,28 +41,30 @@ export function Toolbar(props: ToolbarProps) {
   return (
     <header className="toolbar">
       <span className="brand">Dig</span>
-      <div className="seg" role="group" aria-label="Stream">
+      <select
+        className="tool-select"
+        aria-label="Stream"
+        value={props.stream}
+        onChange={(e) => props.onStream(e.target.value as Stream)}
+      >
         {STREAM_LABELS.map(([s, label]) => (
-          <button
-            key={s}
-            className={`seg-btn${props.stream === s ? ' on' : ''}`}
-            onClick={() => props.onStream(s)}
-          >
+          <option key={s} value={s}>
             {label}
-          </button>
+          </option>
         ))}
-      </div>
-      <div className="seg" role="group" aria-label="View">
+      </select>
+      <select
+        className="tool-select"
+        aria-label="View"
+        value={props.view}
+        onChange={(e) => props.onView(e.target.value as ViewMode)}
+      >
         {VIEW_LABELS.map(([v, label]) => (
-          <button
-            key={v}
-            className={`seg-btn${props.view === v ? ' on' : ''}`}
-            onClick={() => props.onView(v)}
-          >
+          <option key={v} value={v}>
             {label}
-          </button>
+          </option>
         ))}
-      </div>
+      </select>
       <select
         aria-label="Sort"
         value={props.sort}

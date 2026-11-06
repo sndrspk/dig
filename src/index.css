@@ -140,28 +140,16 @@ code {
   margin-right: 8px;
 }
 
-.seg {
-  display: inline-flex;
-  border: 2px solid var(--border);
-  background: var(--panel);
-}
-
-.seg-btn {
-  padding: 8px 14px;
+.tool-select {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-right: 2px solid var(--border);
-}
-
-.seg-btn:last-child {
-  border-right: none;
-}
-
-.seg-btn.on {
-  background: var(--text);
-  color: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  background: var(--panel);
+  padding: 8px 10px;
+  cursor: pointer;
 }
 
 .btn {
@@ -788,18 +776,18 @@ code {
 
 .editorial-text {
   margin: 0 0 14px;
-  padding: 22px 26px;
+  padding: 18px 20px;
   border-left: 8px solid var(--accent);
   background: var(--panel);
   border-top: 2px solid var(--border);
   border-right: 2px solid var(--border);
   border-bottom: 2px solid var(--border);
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 1.5rem;
-  line-height: 1.6;
-  letter-spacing: 0.005em;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 1.02rem;
+  line-height: 1.75;
   color: var(--text);
+  white-space: pre-wrap;
 }
 
 .editorial-text a {
