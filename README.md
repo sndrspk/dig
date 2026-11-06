@@ -16,12 +16,17 @@ another play button.
 
 - **Project scaffolded** (Vite + React + TypeScript, `vite-plugin-pwa`, Dexie,
   TanStack Virtual, TanStack Query).
-- **Step 0 (CORS spike): PASS.** `api.ibroadcast.com` returns
-  `access-control-allow-origin: *` and allows the `Content-Type` and
-  `Authorization` headers, so the pure no-backend architecture is viable.
-  See [docs/step-0-cors-spike.md](docs/step-0-cors-spike.md).
-- The app currently renders the Step 0 spike page — `npm run dev` and open it
-  in a browser to re-verify cross-origin API access from your own machine.
+- **Step 0 (CORS spike): PASS.** `api.ibroadcast.com`, `library.ibroadcast.com`
+  and `oauth.ibroadcast.com` all return `access-control-allow-origin: *` and
+  allow the headers we need, so the pure no-backend architecture is viable.
+  See [docs/step-0-cors-spike.md](docs/step-0-cors-spike.md). The spike page
+  remains available at `/spike` for re-verification from a real browser.
+- **Phase 1 implemented:** OAuth 2.0 device-flow sign-in (scopes
+  `user.library:read` + `user.library:write`), library import into IndexedDB
+  (Dexie) with a cheap `status.lastmodified` refresh check, virtualized
+  grid/table views, carousel and piles views, tag filter, search, sorting,
+  local shelves and per-album notes. All API errors are logged, never
+  swallowed.
 
 ## Development
 
