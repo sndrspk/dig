@@ -106,3 +106,18 @@ and what's next. Detailed technical findings live next to the code (e.g.
   detection.
 - Manual QA in a real browser on Android + Mac: sign-in, first import,
   all four views, shelves, notes, refresh.
+
+## 2026-11-06 — Session 3: Phase 1 merged; local-testing guide
+
+**Done**
+- PR #4 merged into `main` (Phase 1 complete).
+- Added [docs/local-testing.md](local-testing.md): step-by-step, git-free
+  instructions for cloning the repo on the Mac, running dev vs. production
+  preview, signing in via the device flow, and testing the installed PWA on
+  an Android phone over home Wi-Fi (including the Chrome
+  `unsafely-treat-insecure-origin-as-secure` flag needed for a LAN IP).
+- Issue #2 (cross-session tracker) updated to current state.
+
+**Next**
+- Manual QA on device per docs/local-testing.md, then Phase 2 (radar
+  share-target, Qobuz handoff, two-stream toggle, graduation detection).
