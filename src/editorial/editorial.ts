@@ -6,20 +6,33 @@ const MISTRAL_KEY_STORAGE = 'dig.mistral';
 const API_URL = 'https://api.mistral.ai/v1/chat/completions';
 const MODEL = 'mistral-small-latest';
 
+export interface MistralKeyRecord {
+  apiKey: string;
+  updatedAt: number;
+}
+
 export function readMistralKey(): string {
+  return readMistralKeyRecord().apiKey;
+}
+
+export function readMistralKeyRecord(): MistralKeyRecord {
   try {
     const raw = localStorage.getItem(MISTRAL_KEY_STORAGE);
-    if (!raw) return '';
-    return (JSON.parse(raw) as { apiKey?: string }).apiKey?.trim() ?? '';
+    if (!raw) return { apiKey: '', updatedAt: 0 };
+    const parsed = JSON.parse(raw) as Partial<MistralKeyRecord>;
+    return { apiKey: parsed.apiKey?.trim() ?? '', updatedAt: Number(parsed.updatedAt ?? 0) };
   } catch (err) {
     console.error('[dig] failed to read mistral key:', err);
-    return '';
+    return { apiKey: '', updatedAt: 0 };
   }
 }
 
-export function writeMistralKey(apiKey: string): void {
+export function writeMistralKey(apiKey: string, updatedAt = Date.now()): void {
   try {
-    localStorage.setItem(MISTRAL_KEY_STORAGE, JSON.stringify({ apiKey: apiKey.trim() }));
+    localStorage.setItem(
+      MISTRAL_KEY_STORAGE,
+      JSON.stringify({ apiKey: apiKey.trim(), updatedAt } satisfies MistralKeyRecord),
+    );
   } catch (err) {
     console.error('[dig] failed to write mistral key:', err);
   }

@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { db } from '../db';
 import { reportError } from '../errors';
+import { readMistralKeyRecord, writeMistralKey } from '../editorial/editorial';
 import { readSettings } from '../storage';
 import type { Editorial, Note, RadarItem, Shelf } from '../types';
 import { readSyncConfig, type SyncConfig } from './config';
@@ -192,6 +193,42 @@ export const pushRadar = (r: RadarItem): void => push('dig_radar', radarToRow(r)
 export const deleteRadarRemote = (id: string): void => pushDelete('dig_radar', id);
 export const pushEditorial = (e: Editorial): void => push('dig_editorials', editorialToRow(e));
 
+export function pushSetting(key: string, value: string): void {
+  if (!isSyncConfigured() || !value) return;
+  getClient()
+    .from('dig_settings')
+    .upsert(
+      { key, owner_key: ownerKey(), value, updated_at: Date.now() },
+      { onConflict: 'key' },
+    )
+    .then(({ error }) => {
+      if (error) reportError('sync push dig_settings', error.message);
+    });
+}
+
+export function pushMistralKey(apiKey: string): void {
+  pushSetting('mistral_key', apiKey);
+}
+
+function applyRemoteMistralKey(value: string, updatedAt: number): void {
+  const local = readMistralKeyRecord();
+  if (value && updatedAt >= local.updatedAt && value !== local.apiKey) {
+    writeMistralKey(value, updatedAt);
+  }
+}
+
+async function pullSettings(): Promise<void> {
+  const c = getClient();
+  const { data, error } = await c.from('dig_settings').select('*').eq('owner_key', ownerKey());
+  if (error) {
+    reportError('sync pull dig_settings', error.message);
+    return;
+  }
+  for (const row of (data ?? []) as unknown as { key: string; value: string; updated_at: number }[]) {
+    if (row.key === 'mistral_key') applyRemoteMistralKey(row.value, Number(row.updated_at ?? 0));
+  }
+}
+
 const WATERMARK_KEY = 'dig.sync.watermark';
 
 function readWatermark(): number {
@@ -213,6 +250,7 @@ export async function pullAll(): Promise<void> {
   const c = getClient();
   const key = ownerKey();
   const now = Date.now();
+  await pullSettings();
   for (const table of ['dig_shelves', 'dig_notes', 'dig_radar', 'dig_editorials'] as RemoteTable[]) {
     const { data, error } = await c.from(table).select('*').eq('owner_key', key);
     if (error) {
@@ -297,6 +335,21 @@ export async function initSync(onRemoteChange: () => void): Promise<void> {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'dig_editorials', filter: `owner_key=eq.${key}` },
         (payload) => void handleRealtime('dig_editorials', payload, onRemoteChange),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dig_settings', filter: `owner_key=eq.${key}` },
+        (payload) => {
+          const row = (payload.eventType === 'DELETE' ? payload.old : payload.new) as {
+            key?: string;
+            value?: string;
+            updated_at?: number;
+          };
+          if (row.key === 'mistral_key' && typeof row.value === 'string') {
+            applyRemoteMistralKey(row.value, Number(row.updated_at ?? 0));
+            onRemoteChange();
+          }
+        },
       )
       .subscribe((s) => {
         if (s === 'SUBSCRIBED') setStatus('ok', new Date().toLocaleTimeString());

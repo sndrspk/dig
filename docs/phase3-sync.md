@@ -38,3 +38,13 @@ The anon/publishable key is public by design; access control here is the
 `owner_key` row filter (your iBroadcast user id) plus the project URL. Fine
 for personal single-user annotations, as scoped by the spec — the DB never
 holds audio or library proxying.
+
+## Synced settings
+
+When Supabase sync is configured, the **Mistral API key** from the Sync panel
+is also synced (new `dig_settings` key-value table, last-write-wins by
+`updated_at`, realtime). So you only need to paste it once — the other device
+picks it up within seconds. Note: like all `dig_*` rows, it is stored in your
+project and readable with the publishable key + your owner key — same trust
+level as your notes/shelves; the Supabase `service_role` key is never involved.
+The Supabase key itself stays per-device (it is the bootstrap credential).
