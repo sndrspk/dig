@@ -116,7 +116,8 @@ export function buildPrompt(
     {
       role: 'system',
       content:
-        'You are the editorial voice of a sharp music magazine. Write ONE paragraph (3-5 sentences, ~90-130 words), in second person, explaining why this specific listener would love this album, grounded in their taste profile. Be specific, reference concrete details from the profile and the album, no generic hype, no bullet points, no preamble like "Here is". Start directly with the first sentence.',
+        'You are the editorial voice of a sharp music magazine. Write ONE paragraph (3-5 sentences, ~90-130 words), in second person, explaining why this specific listener would love this album, grounded in their taste profile. Be specific, reference concrete details from the profile and the album, no generic hype, no bullet points, no preamble. ' +
+        'Return a valid HTML fragment ONLY: plain text plus <em>, <strong>, <br> and <a href="https://..."> for links. NO markdown (no asterisks, backticks, hashes), no code blocks, no <p> wrapper. Start directly with the first sentence.',
     },
     { role: 'user', content: user },
   ];
@@ -165,4 +166,26 @@ export async function generateEditorial(
     throw new Error('Mistral returned an empty editorial');
   }
   return { text, model: json.model ?? MODEL };
+}
+
+const ALLOWED_TAGS = new Set(['EM', 'STRONG', 'B', 'I', 'BR', 'A']);
+
+export function sanitizeEditorialHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
+  const walk = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+    const el = node as HTMLElement;
+    const inner = [...el.childNodes].map(walk).join('');
+    if (!ALLOWED_TAGS.has(el.tagName)) return inner;
+    if (el.tagName === 'BR') return '<br>';
+    if (el.tagName === 'A') {
+      const href = el.getAttribute('href') ?? '';
+      if (!/^https:\/\//i.test(href)) return inner;
+      return `<a href="${href.replace(/"/g, '%22')}" target="_blank" rel="noopener noreferrer">${inner}</a>`;
+    }
+    const tag = el.tagName.toLowerCase();
+    return `<${tag}>${inner}</${tag}>`;
+  };
+  return [...doc.body.firstChild?.childNodes ?? []].map(walk).join('');
 }

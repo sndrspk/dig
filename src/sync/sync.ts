@@ -163,11 +163,19 @@ async function deleteLocal(table: RemoteTable, id: string): Promise<void> {
   else await db.editorials.delete(id);
 }
 
+const CONFLICT_KEY: Record<string, string> = {
+  dig_shelves: 'id',
+  dig_notes: 'id',
+  dig_radar: 'id',
+  dig_editorials: 'album_id',
+  dig_settings: 'key',
+};
+
 function push(table: RemoteTable, row: Record<string, unknown>): void {
   if (!isSyncConfigured()) return;
   getClient()
     .from(table)
-    .upsert(row, { onConflict: 'id' })
+    .upsert(row, { onConflict: CONFLICT_KEY[table] ?? 'id' })
     .then(({ error }) => {
       if (error) reportError(`sync push ${table}`, error.message);
     });

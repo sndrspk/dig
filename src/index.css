@@ -802,6 +802,13 @@ code {
   color: var(--text);
 }
 
+.editorial-text a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+}
+
 .editorial-text footer {
   margin-top: 10px;
   font-family: var(--font-mono);
