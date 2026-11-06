@@ -413,3 +413,16 @@ iBroadcast history on both devices.
 - User merges PR, redeploys gh-pages, tests playback on Mac + phone (incl.
   lock-screen controls), checks plays in iBroadcast. Then done — issue #2 can
   close.
+
+## 2026-11-06 — Session 15: Phase 4 delivered (PR #14), deployed
+
+- PR #13 (Phase 3) merged by user; Phase 4 split into **PR #14**
+  (vibe/phase4-playback-d29ba6, diff = Phase 4 only).
+- Redeployed gh-pages with the Phase 3+4 build (fixed a repeat of the
+  node_modules-on-gh-pages mistake by committing .gitignore on that branch);
+  Pages build "built"; https://sndrspk.github.io/dig/ serves the bundle with
+  player (mediaSession) + sync (dig_radar) code — verified over HTTP.
+
+**Remaining for issue #2 closure:** on-device Phase 4 DoD — play an owned
+album end-to-end on Mac + phone with lock-screen controls; plays appear in
+iBroadcast history (UTC-verified); skips recorded.
