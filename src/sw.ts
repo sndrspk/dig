@@ -7,6 +7,9 @@ export {};
 const PRECACHE = 'dig-precache-v1';
 const ARTWORK_CACHE = 'dig-artwork-v1';
 const INBOX_DB = 'dig-share-inbox';
+const SCOPE = self.registration.scope;
+const ADD_PATH = new URL('add', SCOPE).pathname;
+const INDEX_URL = new URL('index.html', SCOPE).href;
 
 const manifest = (self as unknown as { __WB_MANIFEST: (string | { url: string })[] })
   .__WB_MANIFEST;
@@ -40,7 +43,7 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  if (req.method === 'POST' && url.pathname === '/add') {
+  if (req.method === 'POST' && url.pathname === ADD_PATH) {
     event.respondWith(handleShare(req));
     return;
   }
@@ -57,11 +60,11 @@ self.addEventListener('fetch', (event) => {
         .then((res) => {
           if (res.ok) {
             const copy = res.clone();
-            void caches.open(PRECACHE).then((c) => c.put('/index.html', copy));
+            void caches.open(PRECACHE).then((c) => c.put(INDEX_URL, copy));
           }
           return res;
         })
-        .catch(async () => (await caches.match('/index.html')) ?? Response.error()),
+        .catch(async () => (await caches.match(INDEX_URL)) ?? Response.error()),
     );
     return;
   }
@@ -107,10 +110,10 @@ async function handleShare(req: Request): Promise<Response> {
       url: String(fd.get('url') ?? ''),
     };
     await saveToInbox(payload);
-    return Response.redirect('/?inbox=1', 303);
+    return Response.redirect(new URL('?inbox=1', SCOPE).href, 303);
   } catch (err) {
     console.error('[dig sw] failed to handle share:', err);
-    return Response.redirect('/?inbox=error', 303);
+    return Response.redirect(new URL('?inbox=error', SCOPE).href, 303);
   }
 }
 
