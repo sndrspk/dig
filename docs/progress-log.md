@@ -311,3 +311,21 @@ app.
 - Owner enables Pages (Settings → Pages → GitHub Actions); merge this PR →
   first deploy runs → test on the phone at https://sndrspk.github.io/dig/
   (install + share-target QA). Then Phase 3.
+
+## 2026-11-06 — Session 10: Pages deploy fix
+
+**Findings from the failed runs (PR #10 merged, workflow ran twice)**
+- Build job **succeeded**; the "Node.js 20 is deprecated" lines were warnings
+  (actions forced onto Node 24). Bumped to the Node-24 majors anyway:
+  checkout@v7, setup-node@v7, configure-pages@v6, upload-pages-artifact@v5,
+  deploy-pages@v5.
+- Deploy job failed with "Deployment failed, try again later" because the
+  Pages site is **not enabled yet** (sndrspk.github.io/dig/ = 404). Owner step
+  required: Settings → Pages → Source → GitHub Actions. The agent token
+  cannot write Pages settings (mutating API blocked).
+- One merge-push run failed at checkout with "repository not found"
+  (transient token hiccup; the workflow_dispatch rerun checked out fine).
+
+**Next**
+- Owner enables Pages (GitHub Actions source); merge the fix PR → next push
+  to main deploys → phone QA at https://sndrspk.github.io/dig/.
