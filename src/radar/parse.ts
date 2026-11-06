@@ -37,6 +37,16 @@ function parseText(text: string): { title: string; artist: string } {
   return { title: t.replace(/\s*\|.*$/, '').trim(), artist: '' };
 }
 
+export function isValidShare(p: ParsedShare): boolean {
+  return p.serviceId !== null || (p.title !== '' && p.artist !== '');
+}
+
+export function shareFallbackTitle(p: ParsedShare): string {
+  if (p.title) return p.title;
+  if (p.serviceId) return `${p.service} ${p.serviceId}`;
+  return '(untitled)';
+}
+
 export function parseShared(input: {
   title?: string | null;
   text?: string | null;

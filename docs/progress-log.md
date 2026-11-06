@@ -198,3 +198,32 @@ and what's next. Detailed technical findings live next to the code (e.g.
   devices; upload a radar album to iBroadcast and confirm the "you own this
   now" flag after Refresh.
 - Phase 3: Supabase (EU) sync of shelves/notes/radar.
+
+## 2026-11-06 — Session 6: Phase 2 bugfixes from Mac QA
+
+**Reported by user (MacBook QA of PR #6)**
+1. No validation on radar quick-add — bogus text accepted, then a bogus Qobuz
+   search link attempted.
+2. "Open in Qobuz" gave an XML error for non-ID items.
+3. A Qobuz-link-only radar entry got no title/artist.
+
+**Fixed**
+- `open.qobuz.com/search/<q>` returns HTTP 505 `HttpVersionNotSupported` (XML
+  error) — verified with plain GETs. Working search form is
+  `https://open.qobuz.com/search?query=<q>` (200 HTML; `www.qobuz.com` search
+  is 403 bot-blocked; `open.qobuz.com/album/<id>` still 200). Handoff now uses
+  the `?query=` form.
+- Validation (`isValidShare`): a share is accepted only with a service ID or
+  both artist and title (from URL or "Artist – Album" / "Album by Artist"
+  text). Bogus input is rejected with a clear error banner; share-inbox entries
+  that fail validation are skipped.
+- ID-only entries get a fallback label (`qobuz <id>`) in all views, and the
+  radar detail page now has editable title/artist fields with Save, so
+  ID-only Qobuz shares can be named manually. (No Qobuz scraping/API — that
+  stays off the table per the ground rules.)
+- Parser/validation re-smoke-tested in Node across 7 share shapes.
+- `npm run build` + `npm run lint` pass.
+
+**Next**
+- Android QA of share-target + handoff (issue #2), then Phase 3 (Supabase EU
+  sync).

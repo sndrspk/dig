@@ -1,7 +1,7 @@
 import { db } from '../db';
 import type { RadarItem, RadarService } from '../types';
 import { normalizeKey } from './graduate';
-import { parseShared } from './parse';
+import { isValidShare, parseShared, shareFallbackTitle } from './parse';
 
 export interface InboxPayload {
   id?: number;
@@ -73,12 +73,12 @@ export async function drainInbox(): Promise<number> {
   const keys = new Set(existing.map(radarDedupeKey));
   for (const p of payloads) {
     const parsed = parseShared(p);
-    if (!parsed.title && !parsed.serviceId) continue;
+    if (!isValidShare(parsed)) continue;
     const key = radarDedupeKey(parsed);
     if (keys.has(key)) continue;
     const item: RadarItem = {
       id: crypto.randomUUID(),
-      title: parsed.title || '(untitled)',
+      title: shareFallbackTitle(parsed),
       artist: parsed.artist,
       service: parsed.service,
       serviceId: parsed.serviceId,

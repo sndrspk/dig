@@ -52,7 +52,10 @@ export function sortAlbums(albums: Album[], sort: SortMode): Album[] {
 }
 
 export function itemTitle(i: ViewItem): string {
-  return i.kind === 'album' ? i.album.title : i.item.title;
+  if (i.kind === 'album') return i.album.title;
+  return (
+    i.item.title || (i.item.serviceId ? `${i.item.service} ${i.item.serviceId}` : '(untitled)')
+  );
 }
 
 export function itemArtist(i: ViewItem): string {
