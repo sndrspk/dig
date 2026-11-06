@@ -788,7 +788,7 @@ code {
 
 .editorial-text {
   margin: 0 0 14px;
-  padding: 18px 22px;
+  padding: 22px 26px;
   border-left: 8px solid var(--accent);
   background: var(--panel);
   border-top: 2px solid var(--border);
@@ -796,8 +796,10 @@ code {
   border-bottom: 2px solid var(--border);
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.3rem;
-  line-height: 1.45;
+  font-size: 1.5rem;
+  line-height: 1.6;
+  letter-spacing: 0.005em;
+  color: var(--text);
 }
 
 .editorial-text footer {
