@@ -30,17 +30,25 @@ Notes:
 - `authenticated: false` is expected: the spike sends no token. It proves
   reachability and CORS, not sign-in.
 - The check was performed server-side (Node `fetch` with a spoofed `Origin`
-  header) because this sandbox has no browser. `src/App.tsx` currently renders
-  the spike page — run `npm run dev` in a real browser to re-verify
-  end-to-end; the app auto-runs the spike on load and shows the response.
+  header) because this sandbox has no browser. The spike page is still served
+  at `/spike` (`src/spike/SpikePage.tsx`) — run `npm run dev` in a real browser
+  and open `/spike` to re-verify end-to-end; it auto-runs the spike on load and
+  shows the response.
 
-## Remaining Step 0 verification (needs a signed-in browser session)
+## Follow-up checks (2026-11-06, Phase 1 session — server-side, spoofed `Origin`)
 
-- Repeat the same check against the **library server** (hostname comes from
-  `settings` in any API response) once device-flow auth exists — it is a
-  different host from `api.ibroadcast.com` and should be confirmed separately.
-- Streaming: a plain `<audio>` element pointed at a signed URL does not enforce
-  CORS unless `crossorigin` is set; verify with one signed URL in Phase 4.
+- **Library server: PASS.** `https://library.ibroadcast.com/` answers OPTIONS
+  and POST with `access-control-allow-origin: *` and allows `Content-Type` and
+  `Authorization`. Unauthenticated POST returns the expected
+  `authenticated: false` JSON.
+- **OAuth server: PASS.** `https://oauth.ibroadcast.com` answers OPTIONS with
+  `access-control-allow-origin: *` / `access-control-allow-headers: content-type`,
+  and `GET /device/code?client_id=…&scope=…` returns a device code JSON
+  cross-origin. Device-flow polling (`POST /token`, form-encoded) is a simple
+  request and passes.
+- Still needs a signed-in browser session: streaming signed URL (Phase 4). A
+  plain `<audio>` element pointed at a signed URL does not enforce CORS unless
+  `crossorigin` is set.
 
 ## Decision
 
