@@ -137,3 +137,64 @@ and what's next. Detailed technical findings live next to the code (e.g.
 - UI polish pass (spacing/density) — timing per user.
 - Phase 2: radar share-target (`/add` SW handler) + paste-URL quick-add,
   Qobuz handoff deep links, two-stream toggle, graduation detection.
+## 2026-11-06 — Session 5: Phase 2 (radar + Qobuz handoff + two-stream toggle) + UI polish
+
+**Done**
+- **Share-target quick-add:** switched the PWA to `injectManifest` with a custom
+  `src/sw.ts`. It precaches the shell, runtime-caches `artwork.ibroadcast.com`
+  (cache-first), handles navigation fallback, and intercepts `POST /add`
+  (the manifest `share_target`): reads the FormData, stores it in a small
+  `dig-share-inbox` IndexedDB, and redirects to `/?inbox=1`. The app drains the
+  inbox on load, parses each share, dedupes, and files it on the radar with a
+  toast. Manifest `share_target` unchanged (`/add`, multipart, title/text/url).
+- **Paste-URL / paste-text quick-add:** an "Add to radar" bar (visible when the
+  stream toggle is Radar/Both) accepts a Qobuz/Bandcamp/Record Club link or a
+  plain "Artist – Album" / "Album by Artist" string.
+- **Parsing** (`src/radar/parse.ts`): Qobuz album IDs extracted from
+  `open./play./www.qobuz.com/.../album/<slug?>/<id>` links; Bandcamp artist
+  subdomain + album slug; Record Club and generic web fall back to text
+  heuristics. Smoke-tested in Node across share shapes.
+- **Qobuz handoff** (`src/radar/handoff.ts`): known album ID →
+  `https://open.qobuz.com/album/<id>` (this URL opens the Qobuz app on Android
+  and the web player on desktop — verified from third-party reports, since
+  `qobuz://` scheme handling is undocumented); otherwise
+  `https://open.qobuz.com/search/<artist album>`. No Qobuz API/credentials
+  anywhere. On Android the link is opened via `location.href` (app if
+  installed), on desktop in a new tab.
+- **Two-stream toggle** in the toolbar (Owned / Radar / Both), persisted. All
+  four views render mixed `ViewItem` lists; radar entries carry a badge
+  (`radar`, or `owned` once graduated) so streams are banded, never silently
+  merged. Tag filter and shelves apply to the owned stream.
+- **Radar detail page:** service, source URL, added date, "Open in Qobuz",
+  remove, and a "You own this now" banner with a link to the owned album when
+  graduated.
+- **Graduation detection** (`src/radar/graduate.ts`): on every sync, radar
+  entries are matched against owned albums by normalized artist+title (fallback
+  title-only); matches set `graduatedToAlbumId` and surface as a toast.
+- **Cross-source artist pages:** artist names in the table view and album detail
+  open an artist screen with banded Owned / Radar sections.
+- **UI polish** (user-reported "cramped"): larger toolbar/buttons/inputs,
+  roomier grid cells (18px gaps, 170px min, taller captions), 48px table rows,
+  wider detail layout (920px, 260px cover), bigger pills/chips/spines, 15px
+  base font.
+- `npm run build` (tsc + vite, injectManifest SW) and `npm run lint` pass;
+  preview smoke test: `/`, `/sw.js` (contains the `/add` share handler),
+  manifest with `share_target` all serve.
+
+**Findings**
+- `open.qobuz.com/album/<id>` links open the Qobuz Android app directly (per
+  third-party reports: the app only registers `open.qobuz.com` links, not
+  `play.qobuz.com`); no-login web access works. Search fallback:
+  `open.qobuz.com/search/<query>`.
+- Qobuz album IDs are alphanumeric (`d7rchuzba48lc`, `0060254757949`); www store
+  URLs are `/<locale>/album/<slug>/<id>`, open/play forms are `/album/<id>`.
+- POST share targets need a service-worker `fetch` handler (hence
+  `injectManifest`); the payload lands in a dedicated `dig-share-inbox` DB to
+  avoid version coupling with the Dexie schema.
+
+**Next**
+- User QA on Android: share an album from the Qobuz app into Dig (share sheet)
+  and confirm it lands on the radar; tap it and confirm Qobuz opens on both
+  devices; upload a radar album to iBroadcast and confirm the "you own this
+  now" flag after Refresh.
+- Phase 3: Supabase (EU) sync of shelves/notes/radar.

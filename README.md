@@ -27,6 +27,12 @@ another play button.
   grid/table views, carousel and piles views, tag filter, search, sorting,
   local shelves and per-album notes. All API errors are logged, never
   swallowed.
+- **Phase 2 implemented:** lens-native radar want list — Android share-target
+  quick-add (custom service worker handles `POST /add`), paste-link/paste-text
+  quick-add, Qobuz handoff via `open.qobuz.com` links (no Qobuz API), a
+  first-class Owned/Radar/Both stream toggle across all views (radar items
+  banded with badges), cross-source artist pages, and graduation detection
+  ("you own this now") on refresh.
 
 ## Development
 

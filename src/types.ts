@@ -1,5 +1,7 @@
 export type ViewMode = 'grid' | 'table' | 'carousel' | 'piles';
 export type SortMode = 'recent' | 'az' | 'artist' | 'year';
+export type Stream = 'owned' | 'radar' | 'both';
+export type RadarService = 'qobuz' | 'bandcamp' | 'recordclub' | 'web';
 
 export interface Album {
   id: string;
@@ -57,3 +59,18 @@ export interface Note {
   createdAt: number;
   linkedFromAlbumId: string | null;
 }
+
+export interface RadarItem {
+  id: string;
+  title: string;
+  artist: string;
+  service: RadarService;
+  serviceId: string | null;
+  url: string | null;
+  addedAt: number;
+  graduatedToAlbumId: string | null;
+}
+
+export type ViewItem =
+  | { kind: 'album'; album: Album }
+  | { kind: 'radar'; item: RadarItem };

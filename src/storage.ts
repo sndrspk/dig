@@ -1,4 +1,4 @@
-import type { SortMode, ViewMode } from './types';
+import type { SortMode, Stream, ViewMode } from './types';
 import type { TokenSet } from './ib/types';
 
 export interface StoredSettings {
@@ -14,6 +14,7 @@ export interface Prefs {
   view: ViewMode;
   sort: SortMode;
   tag: string | null;
+  stream: Stream;
 }
 
 const TOKENS_KEY = 'dig.tokens';
@@ -83,7 +84,7 @@ export function writeSettings(patch: Partial<StoredSettings>): void {
 }
 
 export function readPrefs(): Prefs {
-  return readJson<Prefs>(PREFS_KEY, { view: 'grid', sort: 'recent', tag: null });
+  return readJson<Prefs>(PREFS_KEY, { view: 'grid', sort: 'recent', tag: null, stream: 'owned' });
 }
 
 export function writePrefs(prefs: Prefs): void {

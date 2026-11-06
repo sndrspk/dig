@@ -11,7 +11,15 @@ import {
 import { fmtDate, fmtTotal, fmtTrackLength } from '../format';
 import { Cover } from './Cover';
 
-export function AlbumDetail({ id, onBack }: { id: string; onBack: () => void }) {
+export function AlbumDetail({
+  id,
+  onBack,
+  onOpenArtist,
+}: {
+  id: string;
+  onBack: () => void;
+  onOpenArtist?: (artist: string) => void;
+}) {
   const albumQ = useAlbum(id);
   const tracksQ = useTracks(id);
   const notesQ = useNotes(id);
@@ -47,7 +55,13 @@ export function AlbumDetail({ id, onBack }: { id: string; onBack: () => void }) 
         <div className="detail-info">
           <h2>{album.title}</h2>
           <p className="muted">
-            {album.artist}
+            {onOpenArtist && album.artist ? (
+              <button className="link artist-link" onClick={() => onOpenArtist(album.artist)}>
+                {album.artist}
+              </button>
+            ) : (
+              album.artist
+            )}
             {album.year ? ` · ${album.year}` : ''}
           </p>
           {album.tags.length > 0 && (
