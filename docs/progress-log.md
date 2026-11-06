@@ -426,3 +426,13 @@ iBroadcast history on both devices.
 **Remaining for issue #2 closure:** on-device Phase 4 DoD — play an owned
 album end-to-end on Mac + phone with lock-screen controls; plays appear in
 iBroadcast history (UTC-verified); skips recorded.
+
+## 2026-11-06 — Session 16: accent-sampling CORS fix
+
+**Reported by user:** playback works, but the error banner showed "accent
+sampling (CORS?) — canvas tainted by cross-origin data".
+**Root cause:** artwork.ibroadcast.com DOES send `access-control-allow-origin:
+*` (verified), but the sampler loaded the image without `crossOrigin`, so the
+canvas was tainted. Fix: `img.crossOrigin = 'anonymous'` in the sampler; on
+failure the fallback is now a quiet `console.warn` + idle purple instead of the
+red error banner (cosmetic, not an API error). Build + lint pass; redeployed.
