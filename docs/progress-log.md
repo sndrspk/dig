@@ -227,3 +227,35 @@ and what's next. Detailed technical findings live next to the code (e.g.
 **Next**
 - Android QA of share-target + handoff (issue #2), then Phase 3 (Supabase EU
   sync).
+
+## 2026-11-06 — Session 7: Qobuz handoff redirect fix
+
+**Reported by user (Mac QA of PR #7):** tapping "Open in Qobuz" quickly
+redirected to `https://www.qobuz.com/be-fr/discover` ("cannot find the album").
+
+**Investigation**
+- Server-side, `open.qobuz.com` answers 200 SPA shell for every path, so the
+  redirect is client-side: on desktop, `open.qobuz.com/search?...` is not a
+  handled route and bounces to the storefront discover page. `www.qobuz.com`
+  search paths 403 non-browser agents (Akamai) but are real pages in a real
+  browser.
+- Crosstune PRs #676/#716 (tested on a real Samsung + Qobuz app) document the
+  app's route table: `open.qobuz.com/track/ID` opens and plays;
+  `open.qobuz.com/search/QUERY` opens the app's Discover home (the same
+  symptom); the app only has a bare `/search` route and ignores `?q=`.
+  `open.qobuz.com/album/ID` links open the album in the app on Android and
+  work logged-out on desktop when the album exists in the store.
+
+**Fixed** (`src/radar/handoff.ts`)
+- Album-ID items: unchanged, `https://open.qobuz.com/album/<id>` (opens the
+  Qobuz app on Android, web player on desktop).
+- Search fallback is now platform-aware: Android →
+  `open.qobuz.com/search?q=<query>` (app search tab); desktop →
+  `https://www.qobuz.com/<locale>/search/albums/<query>` with the locale
+  derived from `navigator.language` (e.g. fr-BE → be-fr, fallback us-en).
+- Radar detail gained a "Search Qobuz" button as a manual fallback when an
+  album link lands on discover (album unavailable in the store).
+- `npm run build` + `npm run lint` pass; URL logic smoke-tested in Node.
+
+**Next**
+- Android QA (issue #2), then Phase 3.
