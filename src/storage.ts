@@ -8,6 +8,7 @@ export interface StoredSettings {
   lastmodified: string | null;
   userId: string | null;
   userName: string | null;
+  bitrate: number;
 }
 
 export interface Prefs {
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
   lastmodified: null,
   userId: null,
   userName: null,
+  bitrate: 128,
 };
 
 function readJson<T>(key: string, fallback: T): T {

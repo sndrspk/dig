@@ -6,6 +6,7 @@ import { CarouselView } from './components/CarouselView';
 import { ErrorBanner } from './components/ErrorBanner';
 import { GridView } from './components/GridView';
 import { PilesView } from './components/PilesView';
+import { PlayerBar } from './components/PlayerBar';
 import { RadarDetail } from './components/RadarDetail';
 import { ShelvesView } from './components/ShelvesView';
 import { SignIn } from './components/SignIn';
@@ -15,6 +16,7 @@ import { Toolbar } from './components/Toolbar';
 import { useAddRadar, useAlbums, useRadar, useShelves, useSyncLibrary } from './data';
 import { reportError } from './errors';
 import { itemArtist, itemTitle, sortItems } from './format';
+import { player } from './player/player';
 import { drainInbox } from './radar/inbox';
 import { SpikePage } from './spike/SpikePage';
 import { getSyncStatus, initSync, onSyncStatus, type SyncStatus } from './sync/sync';
@@ -108,6 +110,27 @@ function Main({ auth }: { auth: AuthController }) {
   }, [toast]);
 
   useEffect(() => onSyncStatus(() => setSyncStatus(getSyncStatus().status)), []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === 'INPUT' ||
+          t.tagName === 'TEXTAREA' ||
+          t.tagName === 'SELECT' ||
+          t.tagName === 'BUTTON' ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      e.preventDefault();
+      player.toggle();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
     const invalidateAll = () => {
@@ -295,6 +318,7 @@ function Main({ auth }: { auth: AuthController }) {
         </div>
       )}
       <div className="content">{content}</div>
+      <PlayerBar />
       {sync.isPending && <div className="sync-overlay">Syncing library from iBroadcast…</div>}
       {toast && <div className="toast">{toast}</div>}
     </div>
