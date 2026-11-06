@@ -381,3 +381,48 @@ app.
 - User pastes project URL + publishable key in the Sync panel on Mac and
   phone → DoD: note created on Mac appears on phone within seconds.
 - Redeploy gh-pages with the new build. Then Phase 4 (playback + scrobbling).
+
+## 2026-11-06 — Session 14: Phase 4 (in-lens playback + Media Session + scrobbling)
+
+**Done**
+- `src/player/stream.ts` (pure, unit-smoke-tested): stream URL =
+  `[streaming_server]/[track.file with bitrate segment swapped]?Expires=<now ms>&Signature=<OAuth access token>&file_id=<track id>&user_id=<user id>&platform=dig&version=0.1.0`
+  (file_id = track id per ibroadcastaio; Signature = OAuth access token per the
+  Glaze battle-tested note, NOT status `user.token`); history param builder
+  with UTC `day`/`ts` via getUTC*.
+- `src/player/player.ts`: single `<audio>` element in the DOM, no
+  `crossorigin`, `play()` called synchronously in the click path (token
+  pre-warmed; async refresh only as fallback); per-album queue with
+  next/prev/auto-advance; play scrobbled after 15 s, skip when leaving before;
+  Media Session metadata + play/pause/prev/next handlers + position state;
+  accent colour sampled from the playing track's artwork via canvas (purple
+  fallback on CORS-taint/error, logged).
+- UI: now-playing bar (cover, title/artist, transport, seek slider, progress),
+  "▶ Play album" + clickable track rows in album detail (current track marked),
+  spacebar toggles play/pause unless focus is in a field/button.
+- `getbitratepref` fetched on sync and stored (`settings.bitrate`, default 128;
+  `orig`/higher only when the account allows).
+- Verified: stream URL + history payload shapes in Node; streaming server
+  reachable (unsigned → error status as expected); `npm run build` + lint pass.
+
+**Still needs a signed-in session (issue #2):** one real signed streaming URL
+via plain `<audio>` (no `crossorigin`) and UTC-verified plays appearing in
+iBroadcast history on both devices.
+
+**Next**
+- User merges PR, redeploys gh-pages, tests playback on Mac + phone (incl.
+  lock-screen controls), checks plays in iBroadcast. Then done — issue #2 can
+  close.
+
+## 2026-11-06 — Session 15: Phase 4 delivered (PR #14), deployed
+
+- PR #13 (Phase 3) merged by user; Phase 4 split into **PR #14**
+  (vibe/phase4-playback-d29ba6, diff = Phase 4 only).
+- Redeployed gh-pages with the Phase 3+4 build (fixed a repeat of the
+  node_modules-on-gh-pages mistake by committing .gitignore on that branch);
+  Pages build "built"; https://sndrspk.github.io/dig/ serves the bundle with
+  player (mediaSession) + sync (dig_radar) code — verified over HTTP.
+
+**Remaining for issue #2 closure:** on-device Phase 4 DoD — play an owned
+album end-to-end on Mac + phone with lock-screen controls; plays appear in
+iBroadcast history (UTC-verified); skips recorded.

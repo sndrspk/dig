@@ -173,6 +173,13 @@ export async function syncLibrary(opts: { force: boolean }): Promise<{
   graduated: RadarItem[];
 }> {
   const status = await getStatus();
+  let bitrate = readSettings().bitrate;
+  try {
+    const pref = await apiCall<{ result?: boolean; bitrate?: number }>('getbitratepref');
+    if (pref.result !== false && typeof pref.bitrate === 'number') bitrate = pref.bitrate;
+  } catch (err) {
+    reportError('getbitratepref', err);
+  }
   const settings = status.settings ?? {};
   const libraryServer =
     str(settings.library_server) ?? readSettings().libraryServer;
@@ -186,6 +193,7 @@ export async function syncLibrary(opts: { force: boolean }): Promise<{
     streamingServer,
     userId: str(user.id ?? user.uid ?? user.user_id),
     userName: str(user.username ?? user.name ?? user.email),
+    bitrate,
   });
 
   const previous = readSettings();

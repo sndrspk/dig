@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+import { player } from '../player/player';
 import {
   useAddNote,
   useAlbum,
@@ -28,6 +29,7 @@ export function AlbumDetail({
   const deleteNote = useDeleteNote();
   const toggleShelf = useToggleAlbumInShelf();
   const [noteText, setNoteText] = useState('');
+  const playerState = useSyncExternalStore(player.subscribe, player.getState);
 
   const album = albumQ.data;
   if (!album) {
@@ -78,6 +80,14 @@ export function AlbumDetail({
             {album.addedAt ? ` · added ${fmtDate(album.addedAt)}` : ''}
             {album.rating > 0 ? ` · rated ${album.rating}/5` : ''}
           </p>
+          <div className="detail-actions">
+            <button
+              className="btn btn-primary"
+              onClick={() => player.playAlbum(album, tracks)}
+            >
+              ▶ Play album
+            </button>
+          </div>
           {shelves.length > 0 && (
             <div className="shelf-chips">
               {shelves.map((s) => (
@@ -95,18 +105,30 @@ export function AlbumDetail({
       </div>
 
       <ol className="tracklist">
-        {tracks.map((t) => (
-          <li key={t.id}>
-            <span className="tno muted">{t.track}</span>
-            <span className="ttitle">
-              {t.title}
-              {t.artistName && t.artistName !== album.artist && (
-                <em className="muted"> — {t.artistName}</em>
-              )}
-            </span>
-            <span className="muted">{fmtTrackLength(t.length)}</span>
-          </li>
-        ))}
+        {tracks.map((t, i) => {
+          const isCurrent = playerState.track?.id === t.id;
+          return (
+            <li
+              key={t.id}
+              className={isCurrent ? 'playing' : ''}
+              role="button"
+              tabIndex={0}
+              onClick={() => player.playTrack(album, tracks, i)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') player.playTrack(album, tracks, i);
+              }}
+            >
+              <span className="tno muted">{isCurrent && playerState.playing ? '▶' : t.track}</span>
+              <span className="ttitle">
+                {t.title}
+                {t.artistName && t.artistName !== album.artist && (
+                  <em className="muted"> — {t.artistName}</em>
+                )}
+              </span>
+              <span className="muted">{fmtTrackLength(t.length)}</span>
+            </li>
+          );
+        })}
       </ol>
 
       <section className="notes">
