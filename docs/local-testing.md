@@ -105,3 +105,19 @@ npm run build
   top; it shows the actual API error. Also check the browser console
   (Chrome → ⋮ → More tools → Developer tools → Console) — Dig logs every API
   error there too.
+
+## 7. Deployed URL (test on the phone without the LAN workaround)
+
+The app auto-deploys to **GitHub Pages** on every merge to `main`
+(`.github/workflows/deploy-pages.yml`), served under the project path:
+
+> **https://sndrspk.github.io/dig/**
+
+One-time repo setup (owner): **Settings → Pages → Build and deployment → Source → GitHub Actions** → Save.
+After the first workflow run, on your phone just open that URL in Chrome →
+⋮ menu → **Install app**. HTTPS means no `chrome://flags` step, and the
+share target works natively: share an album from the Qobuz app → Dig appears
+in the share sheet.
+
+The build is served with base path `/dig/` (set via `DIG_BASE` in the
+workflow); local `npm run build` / `npm run preview` keep the root base.

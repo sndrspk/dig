@@ -2,10 +2,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const base = process.env.DIG_BASE ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
+      base,
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
@@ -19,7 +23,7 @@ export default defineConfig({
         theme_color: '#7c3aed',
         background_color: '#0f0d17',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
         icons: [
           {
             src: 'icon.svg',
@@ -29,7 +33,7 @@ export default defineConfig({
           },
         ],
         share_target: {
-          action: '/add',
+          action: 'add',
           method: 'POST',
           enctype: 'multipart/form-data',
           params: { title: 'title', text: 'text', url: 'url' },

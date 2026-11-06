@@ -286,3 +286,28 @@ app.
 
 **Next**
 - Android QA (issue #2), then Phase 3.
+
+## 2026-11-06 — Session 9: GitHub Pages deployment wired up
+
+**Done**
+- Base-path support so the PWA works under the project-pages path `/dig/`:
+  `vite.config.ts` reads `DIG_BASE` (default `/`) for `base`, the PWA `base`,
+  and the manifest `start_url`/`scope`; `share_target.action` is now relative
+  (`add`) so it resolves against the manifest URL; `src/sw.ts` derives the
+  share path, precache index URL and redirect target from
+  `self.registration.scope`; `/spike` route check is suffix-based.
+- Added `.github/workflows/deploy-pages.yml`: on every push to `main`, builds
+  with `DIG_BASE=/dig/` and deploys `dist/` via `actions/deploy-pages`.
+  URL: https://sndrspk.github.io/dig/ (needs the one-time owner step:
+  Settings → Pages → Source: GitHub Actions; the Pages API is not writable
+  from the agent token).
+- Verified the `DIG_BASE=/dig/` build locally: assets/manifest/SW all
+  correctly prefixed, and a subpath-serving smoke test returns 200 for
+  `/dig/`, manifest, `sw.js`, `registerSW.js`, and the JS bundle.
+  `npm run build` (root base) + `npm run lint` pass.
+- `docs/local-testing.md` gained a "Deployed URL" section.
+
+**Next**
+- Owner enables Pages (Settings → Pages → GitHub Actions); merge this PR →
+  first deploy runs → test on the phone at https://sndrspk.github.io/dig/
+  (install + share-target QA). Then Phase 3.

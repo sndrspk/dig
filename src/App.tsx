@@ -275,7 +275,7 @@ function Main({ auth }: { auth: AuthController }) {
 }
 
 export default function App() {
-  if (window.location.pathname.startsWith('/spike')) {
+  if (window.location.pathname.endsWith('/spike')) {
     return <SpikePage />;
   }
   return <Root />;
