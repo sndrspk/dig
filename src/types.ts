@@ -50,6 +50,7 @@ export interface Shelf {
   albumIds: string[];
   sortOrder: number;
   createdAt: number;
+  updatedAt: number;
 }
 
 export interface Note {
@@ -57,6 +58,7 @@ export interface Note {
   albumId: string;
   text: string;
   createdAt: number;
+  updatedAt: number;
   linkedFromAlbumId: string | null;
 }
 
@@ -68,6 +70,7 @@ export interface RadarItem {
   serviceId: string | null;
   url: string | null;
   addedAt: number;
+  updatedAt: number;
   graduatedToAlbumId: string | null;
 }
 

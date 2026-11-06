@@ -9,6 +9,7 @@ import { PilesView } from './components/PilesView';
 import { RadarDetail } from './components/RadarDetail';
 import { ShelvesView } from './components/ShelvesView';
 import { SignIn } from './components/SignIn';
+import { SyncPanel } from './components/SyncPanel';
 import { TableView } from './components/TableView';
 import { Toolbar } from './components/Toolbar';
 import { useAddRadar, useAlbums, useRadar, useShelves, useSyncLibrary } from './data';
@@ -16,6 +17,7 @@ import { reportError } from './errors';
 import { itemArtist, itemTitle, sortItems } from './format';
 import { drainInbox } from './radar/inbox';
 import { SpikePage } from './spike/SpikePage';
+import { getSyncStatus, initSync, onSyncStatus, type SyncStatus } from './sync/sync';
 import { readPrefs, writePrefs, type Prefs } from './storage';
 import type { Album, RadarItem, SortMode, Stream, ViewItem, ViewMode } from './types';
 import { useAuth, type AuthController } from './useAuth';
@@ -52,6 +54,8 @@ function Main({ auth }: { auth: AuthController }) {
   const [addText, setAddText] = useState('');
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [syncPanelOpen, setSyncPanelOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => getSyncStatus().status);
   const autoSynced = useRef(false);
 
   const updatePrefs = (patch: Partial<Prefs>) => {
@@ -102,6 +106,18 @@ function Main({ auth }: { auth: AuthController }) {
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => onSyncStatus(() => setSyncStatus(getSyncStatus().status)), []);
+
+  useEffect(() => {
+    const invalidateAll = () => {
+      void qc.invalidateQueries({ queryKey: ['shelves'] });
+      void qc.invalidateQueries({ queryKey: ['notes'] });
+      void qc.invalidateQueries({ queryKey: ['radar'] });
+      void qc.invalidateQueries({ queryKey: ['radarItem'] });
+    };
+    void initSync(invalidateAll);
+  }, [qc]);
 
   const albums = albumsQ.data ?? [];
   const radar = radarQ.data ?? [];
@@ -220,9 +236,20 @@ function Main({ auth }: { auth: AuthController }) {
           setScreen(screen.type === 'shelves' ? { type: 'library' } : { type: 'shelves' })
         }
         shelvesActive={screen.type === 'shelves' || screen.type === 'shelf'}
+        onSync={() => setSyncPanelOpen((v) => !v)}
+        syncActive={syncPanelOpen}
+        syncStatus={syncStatus}
         albumCount={visible.length}
         onSignOut={() => void auth.signOut()}
       />
+      {syncPanelOpen && (
+        <SyncPanel
+          onChanged={() => {
+            void qc.invalidateQueries({ queryKey: ['shelves'] });
+            void qc.invalidateQueries({ queryKey: ['radar'] });
+          }}
+        />
+      )}
       {prefs.stream !== 'owned' && screen.type !== 'shelves' && (
         <div className="addbar">
           <input

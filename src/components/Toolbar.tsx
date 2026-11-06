@@ -30,6 +30,9 @@ export interface ToolbarProps {
   syncMsg: string | null;
   onShelves: () => void;
   shelvesActive: boolean;
+  onSync: () => void;
+  syncActive: boolean;
+  syncStatus: 'off' | 'syncing' | 'ok' | 'error';
   albumCount: number;
   onSignOut: () => void;
 }
@@ -98,6 +101,13 @@ export function Toolbar(props: ToolbarProps) {
         onClick={props.onShelves}
       >
         Shelves
+      </button>
+      <button
+        className={`btn${props.syncActive ? ' on' : ''}`}
+        onClick={props.onSync}
+        title="Cross-device sync settings"
+      >
+        <span className={`sync-dot ${props.syncStatus}`} aria-hidden /> Sync
       </button>
       <span className="count muted">
         {props.albumCount} albums{props.syncMsg ? ` · ${props.syncMsg}` : ''}

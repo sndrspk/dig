@@ -354,3 +354,30 @@ app.
 - Owner: merge PR #12, switch Pages source to branch gh-pages, verify
   https://sndrspk.github.io/dig/ serves, then phone QA (install + share
   target). Then Phase 3.
+
+## 2026-11-06 — Session 13: Phase 3 (cross-device sync via Supabase)
+
+**Context**
+- User note: free tier allows only 2 Supabase projects (both used) — so the
+  schema went into the **existing "NextDays Drambase" project**
+  (yrnbnejqkoyjxtjsuatd, eu-central-1), `public.dig_*` tables, no new project.
+
+**Done**
+- Applied migration `dig_sync_tables`: `dig_shelves` / `dig_notes` /
+  `dig_radar` (owner_key-indexed, RLS + permissive anon policy, added to
+  `supabase_realtime` publication). Copied to `supabase/schema.sql`.
+- Verified against the live project: REST insert/select/delete with the
+  publishable key → 201/200/204; tables listed with RLS enabled.
+- App: `@supabase/supabase-js` added; `src/sync/sync.ts` (lazy client, owner
+  key = `ib-<ibroadcast user id>`, push on every local mutation, pull with
+  LWW merge + deletion watermark, realtime subscription with UI invalidation,
+  status bus, all errors reported); `src/sync/config.ts` (URL prefilled, key
+  from settings/localStorage/env — key is NOT committed); Sync panel in the
+  toolbar (Sync button + status dot); `updatedAt` added to Shelf/Note/RadarItem
+  and set on all mutations.
+- `docs/phase3-sync.md` setup guide. `npm run build` + `npm run lint` pass.
+
+**Next**
+- User pastes project URL + publishable key in the Sync panel on Mac and
+  phone → DoD: note created on Mac appears on phone within seconds.
+- Redeploy gh-pages with the new build. Then Phase 4 (playback + scrobbling).

@@ -2,6 +2,7 @@ import { db } from '../db';
 import type { RadarItem, RadarService } from '../types';
 import { normalizeKey } from './graduate';
 import { isValidShare, parseShared, shareFallbackTitle } from './parse';
+import { pushRadar } from '../sync/sync';
 
 export interface InboxPayload {
   id?: number;
@@ -84,9 +85,11 @@ export async function drainInbox(): Promise<number> {
       serviceId: parsed.serviceId,
       url: parsed.url,
       addedAt: Date.now(),
+      updatedAt: Date.now(),
       graduatedToAlbumId: null,
     };
     await db.radar.add(item);
+    pushRadar(item);
     keys.add(key);
     added++;
   }
