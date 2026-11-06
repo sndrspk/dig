@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
-import { readMistralKey } from '../editorial/editorial';
+import { readMistralKey, sanitizeEditorialHtml } from '../editorial/editorial';
 import { player } from '../player/player';
 import {
   useAddNote,
@@ -140,12 +140,15 @@ export function AlbumDetail({
       <section className="editorial">
         <h3>Editorial</h3>
         {editorialQ.data && (
-          <blockquote className="editorial-text">
-            {editorialQ.data.text}
-            <footer className="muted small">
-              generated {fmtDate(editorialQ.data.updatedAt)} · {editorialQ.data.model}
-            </footer>
-          </blockquote>
+          <div
+            className="editorial-text"
+            dangerouslySetInnerHTML={{ __html: sanitizeEditorialHtml(editorialQ.data.text) }}
+          />
+        )}
+        {editorialQ.data && (
+          <p className="muted small">
+            generated {fmtDate(editorialQ.data.updatedAt)} · {editorialQ.data.model}
+          </p>
         )}
         <button
           className="btn btn-primary"
