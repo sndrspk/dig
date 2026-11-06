@@ -259,3 +259,30 @@ redirected to `https://www.qobuz.com/be-fr/discover` ("cannot find the album").
 
 **Next**
 - Android QA (issue #2), then Phase 3.
+
+## 2026-11-06 — Session 8: Qobuz handoff v3 — open directly in the app
+
+**Reported by user:** after PR #8, desktop search handoff landed on the
+purchase store (www.qobuz.com); they asked for a way to open directly in the
+app.
+
+**Findings**
+- The Qobuz desktop app registers the **`qobuzapp://`** scheme:
+  `qobuzapp://album/<id>` etc. (kud/qobuz SDK `createAppLink`, used on
+  macOS/Linux to open items in the real app). Web links come in two bases:
+  `open.qobuz.com` (no-login preview; the Android app only handles these) and
+  `play.qobuz.com` (the web player, login required; routes like
+  `/album/<id>`, `/search/all?query=`).
+
+**Handoff v3** (`src/radar/handoff.ts`)
+- Album-ID items on desktop: try `qobuzapp://album/<id>` first (opens the Qobuz
+  app directly when installed); if the window doesn't blur/leave within 1.8 s,
+  fall back to the web player `play.qobuz.com/album/<id>` in a new tab.
+- Album-ID items on Android: `open.qobuz.com/album/<id>` (app link).
+- Search fallback: Android → `open.qobuz.com/search?q=<q>` (the app's only
+  search route); desktop → `play.qobuz.com/search/all?query=<q>` (web player,
+  not the store). "Search Qobuz" button uses the same logic.
+- `npm run build` + `npm run lint` pass; URL builders smoke-tested in Node.
+
+**Next**
+- Android QA (issue #2), then Phase 3.
