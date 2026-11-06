@@ -42,3 +42,6 @@ npm run dev      # dev server
 npm run build    # typecheck + production build (also generates the service worker)
 npm run preview  # serve the production build
 ```
+
+To run and test Dig on your own Mac and Android phone (no deployment needed),
+see [docs/local-testing.md](docs/local-testing.md).
