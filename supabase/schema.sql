@@ -57,3 +57,18 @@ create policy "dig anon access" on public.dig_radar for all to anon using (true)
 
 -- realtime subscriptions (used by the app for cross-device updates)
 alter publication supabase_realtime add table public.dig_shelves, public.dig_notes, public.dig_radar;
+
+-- Phase 4.5: AI editorials (applied as migration "dig_editorials")
+create table if not exists public.dig_editorials (
+  album_id text primary key,
+  owner_key text not null,
+  text text not null,
+  model text not null default '',
+  created_at bigint not null,
+  updated_at bigint not null
+);
+create index if not exists dig_editorials_owner_idx on public.dig_editorials (owner_key);
+alter table public.dig_editorials enable row level security;
+drop policy if exists "dig anon access" on public.dig_editorials;
+create policy "dig anon access" on public.dig_editorials for all to anon using (true) with check (true);
+alter publication supabase_realtime add table public.dig_editorials;

@@ -2,10 +2,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { db } from '../db';
 import { reportError } from '../errors';
 import { readSettings } from '../storage';
-import type { Note, RadarItem, Shelf } from '../types';
+import type { Editorial, Note, RadarItem, Shelf } from '../types';
 import { readSyncConfig, type SyncConfig } from './config';
 
-type RemoteTable = 'dig_shelves' | 'dig_notes' | 'dig_radar';
+type RemoteTable = 'dig_shelves' | 'dig_notes' | 'dig_radar' | 'dig_editorials';
 
 interface RemoteRow {
   id: string;
@@ -99,6 +99,27 @@ function rowToNote(row: RemoteRow): Note {
   };
 }
 
+function editorialToRow(e: Editorial): Record<string, unknown> {
+  return {
+    album_id: e.albumId,
+    owner_key: ownerKey(),
+    text: e.text,
+    model: e.model,
+    created_at: e.createdAt,
+    updated_at: e.updatedAt,
+  };
+}
+
+function rowToEditorial(row: RemoteRow): Editorial {
+  return {
+    albumId: String(row.album_id ?? ''),
+    text: String(row.text ?? ''),
+    model: String(row.model ?? ''),
+    createdAt: Number(row.created_at ?? 0),
+    updatedAt: Number(row.updated_at ?? 0),
+  };
+}
+
 function rowToRadar(row: RemoteRow): RadarItem {
   return {
     id: row.id,
@@ -122,17 +143,23 @@ async function mergeRemote(table: RemoteTable, row: RemoteRow): Promise<void> {
     const local = await db.notes.get(row.id);
     const incoming = rowToNote(row);
     if (!local || incoming.updatedAt >= (local.updatedAt ?? 0)) await db.notes.put(incoming);
-  } else {
+  } else if (table === 'dig_radar') {
     const local = await db.radar.get(row.id);
     const incoming = rowToRadar(row);
     if (!local || incoming.updatedAt >= (local.updatedAt ?? 0)) await db.radar.put(incoming);
+  } else {
+    const albumId = String(row.album_id ?? '');
+    const local = await db.editorials.get(albumId);
+    const incoming = rowToEditorial(row);
+    if (!local || incoming.updatedAt >= (local.updatedAt ?? 0)) await db.editorials.put(incoming);
   }
 }
 
 async function deleteLocal(table: RemoteTable, id: string): Promise<void> {
   if (table === 'dig_shelves') await db.shelves.delete(id);
   else if (table === 'dig_notes') await db.notes.delete(id);
-  else await db.radar.delete(id);
+  else if (table === 'dig_radar') await db.radar.delete(id);
+  else await db.editorials.delete(id);
 }
 
 function push(table: RemoteTable, row: Record<string, unknown>): void {
@@ -163,6 +190,7 @@ export const pushNote = (n: Note): void => push('dig_notes', noteToRow(n));
 export const deleteNoteRemote = (id: string): void => pushDelete('dig_notes', id);
 export const pushRadar = (r: RadarItem): void => push('dig_radar', radarToRow(r));
 export const deleteRadarRemote = (id: string): void => pushDelete('dig_radar', id);
+export const pushEditorial = (e: Editorial): void => push('dig_editorials', editorialToRow(e));
 
 const WATERMARK_KEY = 'dig.sync.watermark';
 
@@ -185,7 +213,7 @@ export async function pullAll(): Promise<void> {
   const c = getClient();
   const key = ownerKey();
   const now = Date.now();
-  for (const table of ['dig_shelves', 'dig_notes', 'dig_radar'] as RemoteTable[]) {
+  for (const table of ['dig_shelves', 'dig_notes', 'dig_radar', 'dig_editorials'] as RemoteTable[]) {
     const { data, error } = await c.from(table).select('*').eq('owner_key', key);
     if (error) {
       reportError(`sync pull ${table}`, error.message);
@@ -199,10 +227,13 @@ export async function pullAll(): Promise<void> {
         ? await db.shelves.toArray()
         : table === 'dig_notes'
           ? await db.notes.toArray()
-          : await db.radar.toArray();
+          : table === 'dig_radar'
+            ? await db.radar.toArray()
+            : await db.editorials.toArray();
     for (const local of localAll) {
-      if (!remoteIds.has(local.id) && (local.updatedAt ?? 0) <= readWatermark()) {
-        await deleteLocal(table, local.id);
+      const localId = table === 'dig_editorials' ? (local as Editorial).albumId : (local as { id: string }).id;
+      if (!remoteIds.has(localId) && (local.updatedAt ?? 0) <= readWatermark()) {
+        await deleteLocal(table, localId);
       }
     }
   }
@@ -261,6 +292,11 @@ export async function initSync(onRemoteChange: () => void): Promise<void> {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'dig_radar', filter: `owner_key=eq.${key}` },
         (payload) => void handleRealtime('dig_radar', payload, onRemoteChange),
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dig_editorials', filter: `owner_key=eq.${key}` },
+        (payload) => void handleRealtime('dig_editorials', payload, onRemoteChange),
       )
       .subscribe((s) => {
         if (s === 'SUBSCRIBED') setStatus('ok', new Date().toLocaleTimeString());

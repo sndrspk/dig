@@ -16,7 +16,7 @@ export interface PlayerState {
   track: Track | null;
 }
 
-const IDLE_ACCENT = '#7c3aed';
+const IDLE_ACCENT = '#00c832';
 const PLAY_SCROBBLE_SECONDS = 15;
 
 class Player {

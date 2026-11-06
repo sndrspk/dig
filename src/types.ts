@@ -77,3 +77,11 @@ export interface RadarItem {
 export type ViewItem =
   | { kind: 'album'; album: Album }
   | { kind: 'radar'; item: RadarItem };
+
+export interface Editorial {
+  albumId: string;
+  text: string;
+  model: string;
+  createdAt: number;
+  updatedAt: number;
+}
