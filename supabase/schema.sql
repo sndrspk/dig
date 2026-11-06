@@ -72,3 +72,16 @@ alter table public.dig_editorials enable row level security;
 drop policy if exists "dig anon access" on public.dig_editorials;
 create policy "dig anon access" on public.dig_editorials for all to anon using (true) with check (true);
 alter publication supabase_realtime add table public.dig_editorials;
+
+-- Settings sync (e.g. the Mistral API key), applied as migration "dig_settings"
+create table if not exists public.dig_settings (
+  key text primary key,
+  owner_key text not null,
+  value text not null,
+  updated_at bigint not null
+);
+create index if not exists dig_settings_owner_idx on public.dig_settings (owner_key);
+alter table public.dig_settings enable row level security;
+drop policy if exists "dig anon access" on public.dig_settings;
+create policy "dig anon access" on public.dig_settings for all to anon using (true) with check (true);
+alter publication supabase_realtime add table public.dig_settings;

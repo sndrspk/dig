@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { readMistralKey, writeMistralKey } from '../editorial/editorial';
 import { SUPABASE_URL, readSyncConfig, writeSyncConfig } from '../sync/config';
-import { getSyncStatus, initSync, onSyncStatus, resetSyncClient } from '../sync/sync';
+import {
+  getSyncStatus,
+  initSync,
+  onSyncStatus,
+  pushMistralKey,
+  resetSyncClient,
+} from '../sync/sync';
 
 export function SyncPanel({ onChanged }: { onChanged: () => void }) {
   const [url, setUrl] = useState(() => readSyncConfig()?.url ?? SUPABASE_URL);
@@ -10,6 +16,10 @@ export function SyncPanel({ onChanged }: { onChanged: () => void }) {
   const [status, setStatus] = useState(getSyncStatus());
 
   useEffect(() => onSyncStatus(() => setStatus(getSyncStatus())), []);
+
+  useEffect(() => {
+    setMistralKey(readMistralKey());
+  }, [status]);
 
   const save = () => {
     writeSyncConfig({ url: url.trim() || SUPABASE_URL, anonKey: anonKey.trim() });
@@ -55,11 +65,18 @@ export function SyncPanel({ onChanged }: { onChanged: () => void }) {
         <input
           value={mistralKey}
           onChange={(e) => setMistralKey(e.target.value)}
-          placeholder="Mistral API key (console.mistral.ai) — enables 'Generate editorial'"
+          placeholder="Mistral API key (console.mistral.ai) — syncs to your other devices when Supabase sync is on"
           aria-label="Mistral API key"
           type="password"
         />
-        <button className="btn" onClick={() => writeMistralKey(mistralKey)} disabled={!mistralKey.trim()}>
+        <button
+          className="btn"
+          onClick={() => {
+            writeMistralKey(mistralKey);
+            pushMistralKey(mistralKey);
+          }}
+          disabled={!mistralKey.trim()}
+        >
           Save key
         </button>
       </div>
