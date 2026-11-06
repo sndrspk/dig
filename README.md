@@ -8,6 +8,12 @@ another play button.
 
 ## Status
 
+> **Working across sessions / with AI agents?** Read
+> [`docs/progress-log.md`](docs/progress-log.md) first — it is the running log
+> of what has been done, what was found, and what's next. Session tracker:
+> [issue #2](https://github.com/sndrspk/dig/issues/2). See also
+> [`AGENTS.md`](AGENTS.md) for repo conventions.
+
 - **Project scaffolded** (Vite + React + TypeScript, `vite-plugin-pwa`, Dexie,
   TanStack Virtual, TanStack Query).
 - **Step 0 (CORS spike): PASS.** `api.ibroadcast.com` returns
