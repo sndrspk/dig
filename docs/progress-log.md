@@ -354,3 +354,20 @@ app.
 - Owner: merge PR #12, switch Pages source to branch gh-pages, verify
   https://sndrspk.github.io/dig/ serves, then phone QA (install + share
   target). Then Phase 3.
+
+## 2026-11-06 — Session 12: Pages deployment live via gh-pages branch
+
+**Root cause of the "Page build failed" error:** the first `gh-pages` push
+accidentally committed `node_modules/` (11,854 files) because `git rm -rf .`
+had removed `.gitignore` before `git add -A`. Pages legacy build choked on
+it. Cleaned the branch to just the built app (9 files, fast-forward push);
+next build status: **built**, no error.
+
+**Verified live:** https://sndrspk.github.io/dig/ serves index (title "Dig"),
+manifest (`start_url: /dig/`, `share_target: add`), sw.js, registerSW.js,
+icon.svg — all 200. Pages source is now legacy branch `gh-pages` `/`.
+
+**Next**
+- Merge PR #12 (removes the Actions deploy workflow from main so pushes don't
+  show red runs while source=branch).
+- Phone QA at the deployed URL. Then Phase 3.
