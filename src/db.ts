@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Album, Note, Shelf, TagEntry, Track } from './types';
+import type { Album, Note, RadarItem, Shelf, TagEntry, Track } from './types';
 
 export class DigDB extends Dexie {
   albums!: Table<Album, string>;
@@ -7,6 +7,7 @@ export class DigDB extends Dexie {
   tags!: Table<TagEntry, string>;
   shelves!: Table<Shelf, string>;
   notes!: Table<Note, string>;
+  radar!: Table<RadarItem, string>;
 
   constructor() {
     super('dig');
@@ -16,6 +17,9 @@ export class DigDB extends Dexie {
       tags: 'id, name, archived',
       shelves: 'id, sortOrder',
       notes: 'id, albumId, createdAt',
+    });
+    this.version(2).stores({
+      radar: 'id, service, addedAt, graduatedToAlbumId',
     });
   }
 }

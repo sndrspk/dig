@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Album } from '../types';
+import { itemArtist, itemTitle, itemYear } from '../format';
+import type { ViewItem } from '../types';
+import { Badge } from './Badge';
 import { Cover } from './Cover';
 
-const SLIDE_GAP = 20;
+const SLIDE_GAP = 24;
 
 export function CarouselView({
-  albums,
+  items,
   onOpen,
 }: {
-  albums: Album[];
-  onOpen: (id: string) => void;
+  items: ViewItem[];
+  onOpen: (item: ViewItem) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -26,7 +28,7 @@ export function CarouselView({
     update();
     const t = setTimeout(update, 400);
     return () => clearTimeout(t);
-  }, [albums, update]);
+  }, [items, update]);
 
   const scrollByOne = (dir: 1 | -1) => {
     const el = ref.current;
@@ -44,18 +46,32 @@ export function CarouselView({
         </button>
       )}
       <div className="carousel" ref={ref} onScroll={update}>
-        {albums.map((a) => (
-          <div className="slide" data-slide key={a.id} onClick={() => onOpen(a.id)}>
-            <Cover album={a} size={1000} className="slide-cover" />
-            <div className="slide-meta">
-              <div className="slide-title">{a.title}</div>
-              <div className="slide-artist muted">
-                {a.artist}
-                {a.year ? ` · ${a.year}` : ''}
+        {items.map((it) =>
+          it.kind === 'album' ? (
+            <div className="slide" data-slide key={it.album.id} onClick={() => onOpen(it)}>
+              <Cover album={it.album} size={1000} className="slide-cover" />
+              <div className="slide-meta">
+                <div className="slide-title">{itemTitle(it)}</div>
+                <div className="slide-artist muted">
+                  {itemArtist(it)}
+                  {itemYear(it) ? ` · ${itemYear(it)}` : ''}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ) : (
+            <div className="slide" data-slide key={it.item.id} onClick={() => onOpen(it)}>
+              <div className="cover cover-empty slide-cover">
+                <span className="svc big">{it.item.service.charAt(0).toUpperCase()}</span>
+              </div>
+              <div className="slide-meta">
+                <div className="slide-title">
+                  {itemTitle(it)} <Badge item={it.item} />
+                </div>
+                <div className="slide-artist muted">{itemArtist(it)}</div>
+              </div>
+            </div>
+          ),
+        )}
       </div>
       {!atEnd && (
         <button className="car-arrow right" onClick={() => scrollByOne(1)} aria-label="Next album">

@@ -1,4 +1,4 @@
-import type { SortMode, ViewMode } from '../types';
+import type { SortMode, Stream, ViewMode } from '../types';
 
 const VIEW_LABELS: [ViewMode, string][] = [
   ['grid', 'Grid'],
@@ -7,7 +7,15 @@ const VIEW_LABELS: [ViewMode, string][] = [
   ['piles', 'Piles'],
 ];
 
+const STREAM_LABELS: [Stream, string][] = [
+  ['owned', 'Owned'],
+  ['radar', 'Radar'],
+  ['both', 'Both'],
+];
+
 export interface ToolbarProps {
+  stream: Stream;
+  onStream: (s: Stream) => void;
   view: ViewMode;
   onView: (v: ViewMode) => void;
   sort: SortMode;
@@ -30,6 +38,17 @@ export function Toolbar(props: ToolbarProps) {
   return (
     <header className="toolbar">
       <span className="brand">Dig</span>
+      <div className="seg" role="group" aria-label="Stream">
+        {STREAM_LABELS.map(([s, label]) => (
+          <button
+            key={s}
+            className={`seg-btn${props.stream === s ? ' on' : ''}`}
+            onClick={() => props.onStream(s)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="seg" role="group" aria-label="View">
         {VIEW_LABELS.map(([v, label]) => (
           <button

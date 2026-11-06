@@ -1,7 +1,8 @@
 import { db } from '../db';
 import { reportError } from '../errors';
+import { graduateRadar } from '../radar/graduate';
 import { readSettings, writeSettings } from '../storage';
-import type { Album, TagEntry, Track } from '../types';
+import type { Album, RadarItem, TagEntry, Track } from '../types';
 import { apiCall } from './client';
 import type { LibraryResponse, RawCollection, RawLibrary, StatusResponse } from './types';
 
@@ -169,6 +170,7 @@ export async function syncLibrary(opts: { force: boolean }): Promise<{
   changed: boolean;
   albumCount: number;
   lastmodified: string | null;
+  graduated: RadarItem[];
 }> {
   const status = await getStatus();
   const settings = status.settings ?? {};
@@ -188,23 +190,33 @@ export async function syncLibrary(opts: { force: boolean }): Promise<{
 
   const previous = readSettings();
   const localCount = await db.albums.count();
-  if (!opts.force && previous.lastmodified && previous.lastmodified === lastmodified && localCount > 0) {
-    return { changed: false, albumCount: localCount, lastmodified };
+  let changed = false;
+  let albumCount = localCount;
+  let newLastmodified = lastmodified;
+
+  if (
+    opts.force ||
+    !previous.lastmodified ||
+    previous.lastmodified !== lastmodified ||
+    localCount === 0
+  ) {
+    const res = await fetchLibrary(libraryServer);
+    const parsed = parseLibrary(res.library ?? {});
+    newLastmodified = res.status?.lastmodified ?? res.library?.status?.lastmodified ?? lastmodified;
+
+    await db.transaction('rw', db.albums, db.tracks, db.tags, async () => {
+      await db.albums.clear();
+      await db.tracks.clear();
+      await db.tags.clear();
+      await db.albums.bulkPut(parsed.albums);
+      await db.tracks.bulkPut(parsed.tracks);
+      await db.tags.bulkPut(parsed.tags);
+    });
+    writeSettings({ lastmodified: newLastmodified });
+    changed = true;
+    albumCount = parsed.albums.filter((a) => !a.trashed).length;
   }
 
-  const res = await fetchLibrary(libraryServer);
-  const parsed = parseLibrary(res.library ?? {});
-  const newLastmodified = res.status?.lastmodified ?? res.library?.status?.lastmodified ?? lastmodified;
-
-  await db.transaction('rw', db.albums, db.tracks, db.tags, async () => {
-    await db.albums.clear();
-    await db.tracks.clear();
-    await db.tags.clear();
-    await db.albums.bulkPut(parsed.albums);
-    await db.tracks.bulkPut(parsed.tracks);
-    await db.tags.bulkPut(parsed.tags);
-  });
-  writeSettings({ lastmodified: newLastmodified });
-
-  return { changed: true, albumCount: parsed.albums.filter((a) => !a.trashed).length, lastmodified: newLastmodified };
+  const graduated = await graduateRadar();
+  return { changed, albumCount, lastmodified: newLastmodified, graduated };
 }

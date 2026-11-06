@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from './db';
 import { syncLibrary } from './ib/library';
-import type { Note, Shelf } from './types';
+import { radarDedupeKey } from './radar/inbox';
+import { parseShared } from './radar/parse';
+import type { Note, RadarItem, Shelf } from './types';
 
 export function useAlbums() {
   return useQuery({
@@ -61,7 +63,64 @@ export function useSyncLibrary() {
     mutationFn: (force: boolean) => syncLibrary({ force }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['albums'] });
+      void qc.invalidateQueries({ queryKey: ['radar'] });
     },
+  });
+}
+
+export function useRadar() {
+  return useQuery({
+    queryKey: ['radar'],
+    queryFn: async () => {
+      const items = await db.radar.toArray();
+      return items.sort((a, b) => b.addedAt - a.addedAt);
+    },
+  });
+}
+
+export function useRadarItem(id: string | null) {
+  return useQuery({
+    queryKey: ['radarItem', id],
+    enabled: id !== null,
+    queryFn: async () => (id ? ((await db.radar.get(id)) ?? null) : null),
+  });
+}
+
+export function useAddRadar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { title?: string; text?: string; url?: string }) => {
+      const parsed = parseShared(input);
+      if (!parsed.title && !parsed.serviceId) throw new Error('could not parse that — paste a link or "Artist – Album"');
+      const existing = await db.radar.toArray();
+      const key = radarDedupeKey(parsed);
+      if (existing.some((r) => radarDedupeKey(r) === key)) {
+        return { item: null as RadarItem | null, dupe: true };
+      }
+      const item: RadarItem = {
+        id: crypto.randomUUID(),
+        title: parsed.title || '(untitled)',
+        artist: parsed.artist,
+        service: parsed.service,
+        serviceId: parsed.serviceId,
+        url: parsed.url,
+        addedAt: Date.now(),
+        graduatedToAlbumId: null,
+      };
+      await db.radar.add(item);
+      return { item, dupe: false };
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['radar'] }),
+  });
+}
+
+export function useDeleteRadar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await db.radar.delete(id);
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ['radar'] }),
   });
 }
 

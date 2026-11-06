@@ -1,4 +1,4 @@
-import type { Album, SortMode } from './types';
+import type { Album, SortMode, ViewItem } from './types';
 
 export function fmtTrackLength(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return '';
@@ -43,7 +43,56 @@ export function sortAlbums(albums: Album[], sort: SortMode): Album[] {
       break;
     case 'recent':
       copy.sort(
-        (a, b) => (b.addedAt ?? -Infinity) - (a.addedAt ?? -Infinity) || a.title.localeCompare(b.title),
+        (a, b) =>
+          (b.addedAt ?? -Infinity) - (a.addedAt ?? -Infinity) || a.title.localeCompare(b.title),
+      );
+      break;
+  }
+  return copy;
+}
+
+export function itemTitle(i: ViewItem): string {
+  return i.kind === 'album' ? i.album.title : i.item.title;
+}
+
+export function itemArtist(i: ViewItem): string {
+  return i.kind === 'album' ? i.album.artist : i.item.artist;
+}
+
+export function itemAddedAt(i: ViewItem): number | null {
+  return i.kind === 'album' ? i.album.addedAt : i.item.addedAt;
+}
+
+export function itemYear(i: ViewItem): number | null {
+  return i.kind === 'album' ? i.album.year : null;
+}
+
+export function sortItems(items: ViewItem[], sort: SortMode): ViewItem[] {
+  const copy = [...items];
+  const title = (i: ViewItem) => itemTitle(i);
+  const artist = (i: ViewItem) => itemArtist(i);
+  switch (sort) {
+    case 'az':
+      copy.sort((a, b) => title(a).localeCompare(title(b), undefined, { sensitivity: 'base' }));
+      break;
+    case 'artist':
+      copy.sort(
+        (a, b) =>
+          artist(a).localeCompare(artist(b), undefined, { sensitivity: 'base' }) ||
+          title(a).localeCompare(title(b), undefined, { sensitivity: 'base' }),
+      );
+      break;
+    case 'year':
+      copy.sort(
+        (a, b) =>
+          (itemYear(b) ?? -Infinity) - (itemYear(a) ?? -Infinity) || title(a).localeCompare(title(b)),
+      );
+      break;
+    case 'recent':
+      copy.sort(
+        (a, b) =>
+          (itemAddedAt(b) ?? -Infinity) - (itemAddedAt(a) ?? -Infinity) ||
+          title(a).localeCompare(title(b)),
       );
       break;
   }
