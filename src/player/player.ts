@@ -225,6 +225,7 @@ class Player {
       return;
     }
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
         const c = document.createElement('canvas');
@@ -248,11 +249,12 @@ class Player {
         if (n === 0) throw new Error('no opaque pixels');
         document.documentElement.style.setProperty('--accent', `rgb(${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)})`);
       } catch (err) {
-        reportError('accent sampling (CORS?) — using idle purple', err);
+        console.warn('[dig] accent sampling failed, using idle purple:', err);
         document.documentElement.style.setProperty('--accent', IDLE_ACCENT);
       }
     };
     img.onerror = () => {
+      console.warn('[dig] artwork failed to load for accent sampling, using idle purple');
       document.documentElement.style.setProperty('--accent', IDLE_ACCENT);
     };
     img.src = art;
