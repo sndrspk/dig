@@ -108,16 +108,23 @@ npm run build
 
 ## 7. Deployed URL (test on the phone without the LAN workaround)
 
-The app auto-deploys to **GitHub Pages** on every merge to `main`
-(`.github/workflows/deploy-pages.yml`), served under the project path:
+The app is deployed to **GitHub Pages** from the `gh-pages` branch (built
+with base path `/dig/`):
 
 > **https://sndrspk.github.io/dig/**
 
-One-time repo setup (owner): **Settings → Pages → Build and deployment → Source → GitHub Actions** → Save.
-After the first workflow run, on your phone just open that URL in Chrome →
-⋮ menu → **Install app**. HTTPS means no `chrome://flags` step, and the
-share target works natively: share an album from the Qobuz app → Dig appears
-in the share sheet.
+Repo setup (owner, one time): **Settings → Pages → Build and deployment →
+Source → "Deploy from a branch" → branch `gh-pages`, folder `/` → Save**
+(this mode has the Save button). After saving, the site builds within a
+minute. On your phone: open the URL in Chrome → ⋮ menu → **Install app**.
+HTTPS means no `chrome://flags` step, and the share target works natively:
+share an album from the Qobuz app → Dig appears in the share sheet.
 
-The build is served with base path `/dig/` (set via `DIG_BASE` in the
-workflow); local `npm run build` / `npm run preview` keep the root base.
+Note: the Actions-based deploy workflow was removed because GitHub's
+Pages deployment backend was failing deployments server-side
+("Deployment failed, try again later", deployment status
+`deployment_failed` on repeated runs, 2026-11-06). The `gh-pages` branch is
+pushed by the agent after each change (`DIG_BASE=/dig/ npm run build`, then
+copy `dist/` onto `gh-pages`); to redeploy manually: build and push that
+branch yourself. Local `npm run build` / `npm run preview` keep the root
+base.

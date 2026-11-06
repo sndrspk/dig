@@ -329,3 +329,28 @@ app.
 **Next**
 - Owner enables Pages (GitHub Actions source); merge the fix PR → next push
   to main deploys → phone QA at https://sndrspk.github.io/dig/.
+
+## 2026-11-06 — Session 11: Pages deploy switched to gh-pages branch
+
+**Findings**
+- With Pages source = GitHub Actions, two consecutive runs created the
+  deployment but the Pages backend marked it `deployment_failed`
+  ("Deployment failed, try again later" at the status poll) — matches the
+  known 2026 Pages backend wedge/incident reports. `GET /pages` shows the
+  site enabled (`build_type: workflow`), so settings are fine; the failure
+  is server-side. Cancelling the wedged deployment needs a mutating API call
+  the agent token can't make.
+
+**Fix**
+- Pushed a `gh-pages` branch containing the `DIG_BASE=/dig/` production build
+  (plus `.nojekyll`). Owner switches Pages source to "Deploy from a branch"
+  → `gh-pages` → `/` → Save (this mode has the Save button) →
+  https://sndrspk.github.io/dig/ goes live without the Actions pipeline.
+- Removed `.github/workflows/deploy-pages.yml` (would fail red on every main
+  push while source=branch; re-add from git history if the Actions backend
+  recovers and workflow deploys are preferred).
+
+**Next**
+- Owner: merge PR #12, switch Pages source to branch gh-pages, verify
+  https://sndrspk.github.io/dig/ serves, then phone QA (install + share
+  target). Then Phase 3.
