@@ -121,3 +121,19 @@ and what's next. Detailed technical findings live next to the code (e.g.
 **Next**
 - Manual QA on device per docs/local-testing.md, then Phase 2 (radar
   share-target, Qobuz handoff, two-stream toggle, graduation detection).
+
+## 2026-11-06 — Session 4: manual QA on Mac (user-reported)
+
+**Done**
+- User ran the production build locally on their Mac (per
+  [local-testing.md](local-testing.md)): device-flow sign-in worked, the
+  library imported, browsing works. Verdict: "looks good".
+- Issue reported: the interface feels cramped — logged as a polish item
+  (spacing/density); user deferred it for now.
+- Issue #2 tracker updated: Mac QA done, Android QA + streaming URL still
+  open.
+
+**Next**
+- UI polish pass (spacing/density) — timing per user.
+- Phase 2: radar share-target (`/add` SW handler) + paste-URL quick-add,
+  Qobuz handoff deep links, two-stream toggle, graduation detection.
