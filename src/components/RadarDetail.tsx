@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDeleteRadar, useRadarItem, useUpdateRadar } from '../data';
 import { fmtDate } from '../format';
-import { openInQobuz } from '../radar/handoff';
+import { openInQobuz, openInQobuzSearch } from '../radar/handoff';
 import { Badge } from './Badge';
 
 export function RadarDetail({
@@ -98,6 +98,14 @@ export function RadarDetail({
           <div className="detail-actions">
             <button className="btn btn-primary" onClick={() => openInQobuz(item)}>
               Open in Qobuz
+            </button>
+            <button
+              className="btn"
+              disabled={!item.title && !item.artist}
+              onClick={() => openInQobuzSearch(item)}
+              title="Search Qobuz by artist + title (use this if the album link can't find it)"
+            >
+              Search Qobuz
             </button>
             <button
               className="btn"
