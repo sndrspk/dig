@@ -3,6 +3,14 @@ import { db } from './db';
 import { syncLibrary } from './ib/library';
 import { radarDedupeKey } from './radar/inbox';
 import { isValidShare, parseShared, shareFallbackTitle } from './radar/parse';
+import {
+  deleteNoteRemote,
+  deleteRadarRemote,
+  deleteShelfRemote,
+  pushNote,
+  pushRadar,
+  pushShelf,
+} from './sync/sync';
 import type { Note, RadarItem, Shelf } from './types';
 
 export function useAlbums() {
@@ -109,9 +117,11 @@ export function useAddRadar() {
         serviceId: parsed.serviceId,
         url: parsed.url,
         addedAt: Date.now(),
+        updatedAt: Date.now(),
         graduatedToAlbumId: null,
       };
       await db.radar.add(item);
+      pushRadar(item);
       return { item, dupe: false };
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['radar'] }),
@@ -123,6 +133,7 @@ export function useDeleteRadar() {
   return useMutation({
     mutationFn: async (id: string) => {
       await db.radar.delete(id);
+      deleteRadarRemote(id);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['radar'] }),
   });
@@ -132,7 +143,10 @@ export function useUpdateRadar() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, title, artist }: { id: string; title: string; artist: string }) => {
-      await db.radar.update(id, { title: title.trim(), artist: artist.trim() });
+      const updated: Partial<RadarItem> = { title: title.trim(), artist: artist.trim(), updatedAt: Date.now() };
+      await db.radar.update(id, updated);
+      const full = await db.radar.get(id);
+      if (full) pushRadar(full);
     },
     onSuccess: (_r, vars) => {
       void qc.invalidateQueries({ queryKey: ['radar'] });
@@ -151,8 +165,10 @@ export function useCreateShelf() {
         albumIds: [],
         sortOrder: Date.now(),
         createdAt: Date.now(),
+        updatedAt: Date.now(),
       };
       await db.shelves.add(shelf);
+      pushShelf(shelf);
       return shelf;
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['shelves'] }),
@@ -164,6 +180,7 @@ export function useDeleteShelf() {
   return useMutation({
     mutationFn: async (shelfId: string) => {
       await db.shelves.delete(shelfId);
+      deleteShelfRemote(shelfId);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['shelves'] }),
   });
@@ -176,9 +193,13 @@ export function useToggleAlbumInShelf() {
       const shelf = await db.shelves.get(shelfId);
       if (!shelf) throw new Error(`shelf ${shelfId} not found`);
       const has = shelf.albumIds.includes(albumId);
-      await db.shelves.update(shelfId, {
+      const updated: Shelf = {
+        ...shelf,
         albumIds: has ? shelf.albumIds.filter((x) => x !== albumId) : [...shelf.albumIds, albumId],
-      });
+        updatedAt: Date.now(),
+      };
+      await db.shelves.put(updated);
+      pushShelf(updated);
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['shelves'] }),
   });
@@ -193,9 +214,11 @@ export function useAddNote() {
         albumId,
         text: text.trim(),
         createdAt: Date.now(),
+        updatedAt: Date.now(),
         linkedFromAlbumId: null,
       };
       await db.notes.add(note);
+      pushNote(note);
       return note;
     },
     onSuccess: (_note, vars) => void qc.invalidateQueries({ queryKey: ['notes', vars.albumId] }),
@@ -207,6 +230,7 @@ export function useDeleteNote() {
   return useMutation({
     mutationFn: async (vars: { id: string; albumId: string }) => {
       await db.notes.delete(vars.id);
+      deleteNoteRemote(vars.id);
     },
     onSuccess: (_r, vars) => void qc.invalidateQueries({ queryKey: ['notes', vars.albumId] }),
   });

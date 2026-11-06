@@ -888,3 +888,39 @@ code {
     max-width: none;
   }
 }
+
+.sync-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 18px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.sync-panel input {
+  width: 260px;
+  max-width: 100%;
+}
+
+.sync-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  margin-right: 2px;
+}
+
+.sync-dot.ok {
+  background: #34d399;
+}
+
+.sync-dot.syncing {
+  background: #fbbf24;
+}
+
+.sync-dot.error {
+  background: #f87171;
+}
