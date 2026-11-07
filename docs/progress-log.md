@@ -462,3 +462,21 @@ red error banner (cosmetic, not an API error). Build + lint pass; redeployed.
 **Next**
 - User merges PR, redeploys gh-pages (done by agent), hard-refreshes both
   devices, adds Mistral key, tries Generate editorial. Then issue #2 closes.
+
+## 2026-11-06 — Session 18: PR #18 rebased + Readex Pro pairing + honest editorial prompt
+
+- #19 and #20 merged; #18 was still open and based on an older main → rebased
+  `vibe/ui-compaction-d29ba6` onto main, resolved the index.css/editorial.ts
+  overlaps, and **verified merging #18 after #19/#20 is conflict-free** (local
+  merge of main + branch → build + lint pass). Force-with-lease pushed the
+  rebased PR head.
+- Fonts: Archivo Black (display) + Space Mono (labels) + **Readex Pro** as body
+  and long-form font; editorial box = Readex Pro 1.18rem/1.7. PR #18 retitled
+  accordingly.
+- Editorial prompt: honest profile-matching (why love it OR why not + what to
+  listen for), substance over name-dropping, artist name ≤1, HTML-only output
+  (sanitized per #20). Prompt smoke-tested in Node.
+- Deployed union to gh-pages; Pages build green; live bundle verified
+  (Readex + dropdowns present).
+
+**Safe merge order now:** main is current; just merge #18 — nothing else open.
