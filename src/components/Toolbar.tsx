@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { SortMode, Stream, ViewMode } from '../types';
 
 const VIEW_LABELS: [ViewMode, string][] = [
@@ -38,9 +39,19 @@ export interface ToolbarProps {
 }
 
 export function Toolbar(props: ToolbarProps) {
+  const [open, setOpen] = useState(false);
   return (
-    <header className="toolbar">
+    <header className={`toolbar${open ? ' open' : ''}`}>
       <span className="brand">Dig</span>
+      <button
+        className="btn toolbar-toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label="Toggle controls"
+      >
+        {open ? 'Close ×' : 'Controls ≡'}
+      </button>
+      <div className="toolbar-controls">
       <select
         className="tool-select"
         aria-label="Stream"
@@ -117,6 +128,7 @@ export function Toolbar(props: ToolbarProps) {
       <button className="btn" onClick={props.onSignOut}>
         Sign out
       </button>
+      </div>
     </header>
   );
 }

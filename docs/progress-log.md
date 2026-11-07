@@ -480,3 +480,30 @@ red error banner (cosmetic, not an API error). Build + lint pass; redeployed.
   (Readex + dropdowns present).
 
 **Safe merge order now:** main is current; just merge #18 — nothing else open.
+
+## 2026-11-07 — Session 19: mobile layout fixes (foldable toolbar, tap-to-fullscreen player)
+
+**Reported by user:** desktop looks great, phone is a mess (3 screenshots on
+main: `Screenshot_20261107-*.png`). Issues seen: toolbar dropdowns/buttons
+overflow and overlap, controls tiny and cramped, playing bar text cut off.
+
+**Done**
+- **Foldable toolbar (mobile):** toolbar controls now live in a
+  `.toolbar-controls` wrapper (`display: contents` on desktop — pixel-identical
+  to before). Below 640px the header collapses to brand + "Controls" toggle;
+  tapping expands the full control set as a wrapping panel (search and selects
+  stretch full-width). Toggle hidden entirely on desktop.
+- **Tap-to-fullscreen player:** tapping the player bar opens a fullscreen
+  Now Playing overlay (big artwork, title/artist, seek slider, large prev/play/
+  next buttons, "Close" button or tap backdrop to dismiss). Buttons inside the
+  bar stopPropagation so quick controls still work inline.
+- **Other mobile tweaks:** player bar drops the inline seek row below 640px
+  (meta flexes to fill, ellipsis intact; seeking happens in fullscreen), touch
+  targets ≥42px, addbar wraps with full-width "Add to radar" button and
+  flexible input, tightened paddings.
+- `npm run build` + lint pass.
+
+**Next**
+- On-device check: fold/unfold toolbar, tap bar → fullscreen, seek, lock-screen
+  controls still fine; iterate on any remaining cramped screens (grid density
+  on small phones is the likely next candidate).
