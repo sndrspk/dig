@@ -41,7 +41,6 @@ export function writeMistralKey(apiKey: string, updatedAt = Date.now()): void {
 export interface ProfileInput {
   albumCount: number;
   topTags: [string, number][];
-  topArtists: [string, number][];
   topGenres: [string, number][];
   recentNotes: string[];
 }
@@ -50,7 +49,7 @@ export function buildProfileText(p: ProfileInput): string {
   const lines: string[] = [];
   lines.push(`collection: ${p.albumCount} albums`);
   if (p.topTags.length) lines.push(`favourite tags: ${p.topTags.map(([t, n]) => `${t} (${n})`).join(', ')}`);
-  if (p.topArtists.length) lines.push(`most-played artists: ${p.topArtists.map(([a, n]) => `${a} (${n})`).join(', ')}`);
+  lines.push('artist names intentionally withheld so the editorial interprets, not parrots');
   if (p.topGenres.length) lines.push(`genres: ${p.topGenres.map(([g, n]) => `${g} (${n})`).join(', ')}`);
   if (p.recentNotes.length) {
     lines.push('their own notes on albums:');
@@ -64,10 +63,8 @@ export async function buildProfile(): Promise<string> {
   const notes = await db.notes.toArray();
   const tracks = await db.tracks.toArray();
   const tagCounts = new Map<string, number>();
-  const artistCounts = new Map<string, number>();
   for (const a of albums) {
     if (a.trashed) continue;
-    if (a.artist) artistCounts.set(a.artist, (artistCounts.get(a.artist) ?? 0) + 1);
     for (const t of a.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
   }
   const genreCounts = new Map<string, number>();
@@ -83,7 +80,6 @@ export async function buildProfile(): Promise<string> {
   return buildProfileText({
     albumCount: albums.filter((a) => !a.trashed).length,
     topTags: top(tagCounts),
-    topArtists: top(artistCounts),
     topGenres: top(genreCounts),
     recentNotes,
   });
@@ -118,7 +114,8 @@ export function buildPrompt(
       content:
         'You are the editorial voice of a sharp music magazine. Write ONE paragraph (3-5 sentences, ~90-130 words), in second person, matching this album against the listener\'s taste profile: explain why they would love it \u2014 or honestly why they might not, and what to listen for instead. ' +
 
-        'Describe the music in its own terms \u2014 sound, production, instrumentation, rhythm, mood, era \u2014 and tie those qualities to evidence in the profile (tags, genres, their notes). NEVER name other artists, albums, or songs, not even for comparison (no "think X", "like Y", "would make Z nod"): zero name-drops. You may mention this album\'s own artist at most once. No hype, no bullet points, no preamble. ' +
+        'Editorial guidelines: focus on CONTENT and INTERPRETATION \u2014 what the album is about (themes, lyrics, songwriting, structure), how it sounds and is produced (instrumentation, rhythm, texture, era), and what it means for this listener given their profile (tags, genres, their notes). Interpret; do not catalogue. ' +
+        'Naming rules: you may reference at most ONE other artist/album, and only when a comparison genuinely illuminates the music \u2014 and never one from the listener\'s own collection or favourites. Prefer describing the sound in your own words. No lists of names, no "think X / like Y" chains. You may mention this album\'s own artist at most once. No hype, no bullet points, no preamble. ' +
         'Return a valid HTML fragment ONLY: plain text plus <em>, <strong>, <br> and <a href="https://..."> for links. NEVER use markdown asterisks or backticks for emphasis \u2014 use <em>/<strong> tags. No code blocks, no <p> wrapper. Start directly with the first sentence.',
     },
     { role: 'user', content: user },
