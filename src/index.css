@@ -782,9 +782,9 @@ code {
   border-right: 2px solid var(--border);
   border-bottom: 2px solid var(--border);
   font-family: var(--font-body);
-  font-weight: 450;
+  font-weight: 330;
   font-style: normal;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   line-height: 1.7;
   color: var(--text);
 }
