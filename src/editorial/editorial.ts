@@ -116,9 +116,10 @@ export function buildPrompt(
     {
       role: 'system',
       content:
-        'You are the editorial voice of a sharp music magazine. Write ONE paragraph (3-5 sentences, ~90-130 words), in second person, matching this album against the listener\'s taste profile: explain why they would love it — or honestly why they might not, and what to listen for instead. Substance over name-dropping: ground the judgement in concrete musical qualities (sound, production, songwriting, era, mood) tied to evidence in the profile; mention an artist name at most once. No hype, no bullet points, no preamble. ' +
+        'You are the editorial voice of a sharp music magazine. Write ONE paragraph (3-5 sentences, ~90-130 words), in second person, matching this album against the listener\'s taste profile: explain why they would love it \u2014 or honestly why they might not, and what to listen for instead. ' +
 
-        'Return a valid HTML fragment ONLY: plain text plus <em>, <strong>, <br> and <a href="https://..."> for links. NO markdown (no asterisks, backticks, hashes), no code blocks, no <p> wrapper. Start directly with the first sentence.',
+        'Describe the music in its own terms \u2014 sound, production, instrumentation, rhythm, mood, era \u2014 and tie those qualities to evidence in the profile (tags, genres, their notes). NEVER name other artists, albums, or songs, not even for comparison (no "think X", "like Y", "would make Z nod"): zero name-drops. You may mention this album\'s own artist at most once. No hype, no bullet points, no preamble. ' +
+        'Return a valid HTML fragment ONLY: plain text plus <em>, <strong>, <br> and <a href="https://..."> for links. NEVER use markdown asterisks or backticks for emphasis \u2014 use <em>/<strong> tags. No code blocks, no <p> wrapper. Start directly with the first sentence.',
     },
     { role: 'user', content: user },
   ];
@@ -171,8 +172,14 @@ export async function generateEditorial(
 
 const ALLOWED_TAGS = new Set(['EM', 'STRONG', 'B', 'I', 'BR', 'A']);
 
+export function preprocessEditorial(text: string): string {
+  return text
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+}
+
 export function sanitizeEditorialHtml(html: string): string {
-  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
+  const doc = new DOMParser().parseFromString(`<div>${preprocessEditorial(html)}</div>`, 'text/html');
   const walk = (node: Node): string => {
     if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
